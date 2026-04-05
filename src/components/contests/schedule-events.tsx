@@ -59,7 +59,7 @@ export function ScheduleEvents({ contestId }: { contestId: string }) {
         <input type="datetime-local" value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputClass} />
         <button
           onClick={() => add.mutate()}
-          disabled={add.isPending || !title.trim()}
+          disabled={add.isPending || !title.trim() || !startTime}
           className="px-2 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 shrink-0"
         >
           Add

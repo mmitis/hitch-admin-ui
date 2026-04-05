@@ -15,6 +15,7 @@ interface ContestItem {
   startingPosition?: { name: string };
   targetPosition?: { name: string };
   logoUrl?: string | null;
+  currentLogo?: string | null;
 }
 
 export function ContestsList() {
@@ -22,6 +23,7 @@ export function ContestsList() {
   const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<ContestItem | undefined>(undefined);
+  const [deleteError, setDeleteError] = useState('');
 
   const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
   const authHeader = { Authorization: `ApiKey ${apiKey}` };
@@ -36,7 +38,11 @@ export function ContestsList() {
       if (!listRes.ok) throw new Error(listRes.statusText);
       const list: ContestItem[] = await listRes.json();
       const logos: Record<string, string> = logosRes.ok ? await logosRes.json() : {};
-      return list.map((c) => ({ ...c, logoUrl: logos[c.id] ?? null }));
+      return list.map((c) => ({
+        ...c,
+        logoUrl: logos[c.id] ?? null,
+        currentLogo: logos[c.id] ? logos[c.id].split('/').pop() ?? null : null,
+      }));
     },
     enabled: !!apiKey,
   });
@@ -47,12 +53,14 @@ export function ContestsList() {
       if (!res.ok) throw new Error(res.statusText);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['contests'] }),
+    onError: (e) => setDeleteError(e instanceof Error ? e.message : 'Delete failed'),
   });
 
   if (isLoading) return <p className="text-sm text-zinc-400">Loading…</p>;
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
+      {deleteError && <p className="text-sm text-red-600 mb-2">{deleteError}</p>}
       <div className="flex justify-end">
         <button
           onClick={() => { setEditing(undefined); setModalOpen(true); }}
@@ -88,7 +96,7 @@ export function ContestsList() {
               </button>
             </div>
           </div>
-          <LogoUploader contestId={c.id} logoUrl={c.logoUrl} />
+          <LogoUploader contestId={c.id} logoUrl={c.logoUrl} currentLogo={c.currentLogo} />
           <ScheduleEvents contestId={c.id} />
         </div>
       ))}

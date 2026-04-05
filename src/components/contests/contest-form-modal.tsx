@@ -79,7 +79,7 @@ export function ContestFormModal({ isOpen, onClose, initial }: Props) {
           <button onClick={onClose} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg hover:bg-zinc-50">Cancel</button>
           <button
             onClick={() => save.mutate()}
-            disabled={save.isPending || !name.trim()}
+            disabled={save.isPending || !name.trim() || !dateStart || !dateEnd}
             className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
             {save.isPending ? 'Saving…' : initial ? 'Save' : 'Create'}
