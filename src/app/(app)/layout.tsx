@@ -10,9 +10,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Wait one tick for localStorage hydration before redirecting
     const timer = setTimeout(() => {
-      if (!localStorage.getItem('hitch_api_key')) {
+      if (!apiKey) {
         router.replace('/login');
       }
     }, 50);

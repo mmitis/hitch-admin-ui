@@ -12,17 +12,35 @@ interface ContestContextValue {
 const ContestContext = createContext<ContestContextValue | null>(null);
 
 export function ContestProvider({ children }: { children: ReactNode }) {
-  const [contestId, setContestId] = useState<string | null>(null);
-  const [contestName, setContestName] = useState<string | null>(null);
+  const [contestId, setContestId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('hitch_contest_id') ?? null;
+    }
+    return null;
+  });
+  const [contestName, setContestName] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('hitch_contest_name') ?? null;
+    }
+    return null;
+  });
 
   function setContest(id: string, name: string) {
     setContestId(id);
     setContestName(name);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('hitch_contest_id', id);
+      sessionStorage.setItem('hitch_contest_name', name);
+    }
   }
 
   function clearContest() {
     setContestId(null);
     setContestName(null);
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('hitch_contest_id');
+      sessionStorage.removeItem('hitch_contest_name');
+    }
   }
 
   return (
