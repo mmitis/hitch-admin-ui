@@ -41,7 +41,7 @@ export function UsersTable() {
         fetch(`${BASE}/contest/${encodeURIComponent(contestId!)}/participants`, { headers: authHeader }),
         fetch(`${BASE}/hitch/contest/${encodeURIComponent(contestId!)}/ranking`, { headers: authHeader }),
       ]);
-      const participants: Participant[] = await pRes.json();
+      const participants: Participant[] = pRes.ok ? await pRes.json() : [];
       const ranking: Array<{ user: { id: string; name: string } }> = rRes.ok ? await rRes.json() : [];
       const nameMap = Object.fromEntries(ranking.map((r) => [r.user.id, r.user.name]));
       return participants.map((p) => ({ ...p, rankName: nameMap[p.externalUserId] ?? p.name }));

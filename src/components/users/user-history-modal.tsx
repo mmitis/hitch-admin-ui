@@ -3,6 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth-context';
 
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 interface HistoryEntry {
   latitude: number;
   longitude: number;
@@ -25,7 +27,7 @@ export function UserHistoryModal({ contestId, userId, userName, isOpen, onClose 
     queryKey: ['user-history', contestId, userId],
     queryFn: async () => {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hitch/contest/${encodeURIComponent(contestId)}/history/${encodeURIComponent(userId)}`,
+        `${BASE}/hitch/contest/${encodeURIComponent(contestId)}/history/${encodeURIComponent(userId)}`,
         { headers: { Authorization: `ApiKey ${apiKey}` } },
       );
       return res.json();

@@ -1,27 +1,33 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button, Card, CardContent, CardHeader } from '@heroui/react';
 import { useContest } from '@/contexts/contest-context';
 import { useAuth } from '@/contexts/auth-context';
 
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 export function ContestActions() {
-  const { contestId } = useContest();
+  const { contestId, clearContest } = useContest();
   const { apiKey } = useAuth();
+  const qc = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  async function clearContest() {
+  async function handleClear() {
     if (!contestId) return;
     if (!apiKey) { setError('Not authenticated'); return; }
     setLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hitch/contest/${encodeURIComponent(contestId)}/clear`,
+        `${BASE}/hitch/contest/${encodeURIComponent(contestId)}/clear`,
         { method: 'POST', headers: { Authorization: `ApiKey ${apiKey}` } },
       );
       if (!res.ok) throw new Error(res.statusText);
+      qc.invalidateQueries({ queryKey: ['participants', contestId] });
+      clearContest();
       setIsOpen(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed');
@@ -49,7 +55,7 @@ export function ContestActions() {
             <p className="text-sm text-zinc-500 mb-4">This clears all participant data for the selected contest. Are you sure?</p>
             <div className="flex gap-2 justify-end">
               <button onClick={() => setIsOpen(false)} className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg hover:bg-zinc-50">Cancel</button>
-              <button onClick={clearContest} disabled={loading} className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
+              <button onClick={handleClear} disabled={loading} className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50">
                 {loading ? 'Clearing…' : 'Clear'}
               </button>
             </div>

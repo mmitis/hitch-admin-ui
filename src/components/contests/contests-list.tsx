@@ -52,7 +52,10 @@ export function ContestsList() {
       const res = await fetch(`${BASE}/contest/${encodeURIComponent(id)}`, { method: 'DELETE', headers: authHeader });
       if (!res.ok) throw new Error(res.statusText);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['contests'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['contests'] });
+      qc.invalidateQueries({ queryKey: ['contest-list'] });
+    },
     onError: (e) => setDeleteError(e instanceof Error ? e.message : 'Delete failed'),
   });
 

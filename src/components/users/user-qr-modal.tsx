@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 interface Props {
   contestId: string;
   userId: string;
@@ -25,7 +27,7 @@ export function UserQrModal({ contestId, userId, userName, isOpen, onClose }: Pr
     if (!apiKey) return;
     setLoading(true);
     fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/contest/${encodeURIComponent(contestId)}/qr?userId=${encodeURIComponent(userId)}`,
+      `${BASE}/contest/${encodeURIComponent(contestId)}/qr?userId=${encodeURIComponent(userId)}`,
       { headers: { Authorization: `ApiKey ${apiKey}` } },
     )
       .then((r) => r.blob())

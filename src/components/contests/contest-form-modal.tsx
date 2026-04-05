@@ -55,7 +55,11 @@ export function ContestFormModal({ isOpen, onClose, initial }: Props) {
       });
       if (!res.ok) throw new Error(res.statusText);
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['contests'] }); onClose(); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['contests'] });
+      qc.invalidateQueries({ queryKey: ['contest-list'] });
+      onClose();
+    },
   });
 
   if (!isOpen) return null;
