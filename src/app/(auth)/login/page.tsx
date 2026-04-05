@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader } from '@heroui/react';
 import { useAuth } from '@/contexts/auth-context';
-import { setApiKey } from '@/lib/api';
 
 export default function LoginPage() {
   const [key, setKey] = useState('');
@@ -19,18 +18,19 @@ export default function LoginPage() {
     if (!trimmed) return;
     setError('');
     setLoading(true);
-    setApiKey(trimmed);
     try {
       const res = await fetch(
         (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000') + '/contest/list',
         { headers: { Authorization: `ApiKey ${trimmed}` } },
       );
-      if (!res.ok) throw new Error('Invalid API key');
+      if (!res.ok) {
+        setError('Invalid API key. Please try again.');
+        return;
+      }
       login(trimmed);
       router.push('/management');
     } catch {
-      setApiKey(null);
-      setError('Invalid API key. Please try again.');
+      setError('Connection error. Is the API running?');
     } finally {
       setLoading(false);
     }
