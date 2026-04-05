@@ -20,10 +20,11 @@ export function NewsList() {
   const authHeader = { Authorization: `ApiKey ${apiKey}` };
   const authJson = { ...authHeader, 'Content-Type': 'application/json' };
 
-  const { data, isLoading } = useQuery<NewsItemData[]>({
+  const { data, isLoading, isError } = useQuery<NewsItemData[]>({
     queryKey: ['news', contestId],
     queryFn: async () => {
       const res = await fetch(newsUrl, { headers: authHeader });
+      if (!res.ok) throw new Error(res.statusText);
       return res.json();
     },
     enabled: !!contestId && !!apiKey,
@@ -49,6 +50,7 @@ export function NewsList() {
 
   if (!contestId) return <p className="text-sm text-zinc-400">Select a contest first.</p>;
   if (isLoading) return <p className="text-sm text-zinc-400">Loading…</p>;
+  if (isError) return <p className="text-sm text-red-600">Failed to load news.</p>;
 
   return (
     <div className="flex flex-col gap-4 max-w-2xl">

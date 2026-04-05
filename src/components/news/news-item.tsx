@@ -87,13 +87,18 @@ export function NewsItem({ item }: { item: NewsItemData }) {
               Edit
             </button>
             <button
-              onClick={() => remove.mutate()}
+              onClick={() => {
+                if (window.confirm('Delete this news item?')) {
+                  remove.mutate();
+                }
+              }}
               disabled={remove.isPending}
               className="px-3 py-1.5 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
             >
               {remove.isPending ? 'Deleting…' : 'Delete'}
             </button>
           </div>
+          {remove.isError && <p className="text-xs text-red-600">Delete failed. Please try again.</p>}
         </>
       )}
     </div>
