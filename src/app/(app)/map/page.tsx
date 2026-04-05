@@ -1,12 +1,23 @@
-import { Topbar } from '@/components/layout/topbar';
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const MapView = dynamic(
+  () => import('@/components/map/map-view').then((m) => m.MapView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center text-zinc-400 text-sm">
+        Loading map…
+      </div>
+    ),
+  },
+);
 
 export default function MapPage() {
   return (
-    <>
-      <Topbar title="Map" />
-      <main className="flex-1 overflow-auto p-5">
-        <p className="text-zinc-400 text-sm">Coming soon…</p>
-      </main>
-    </>
+    <div className="flex-1 flex flex-col overflow-hidden h-full">
+      <MapView />
+    </div>
   );
 }
