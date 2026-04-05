@@ -8,6 +8,8 @@ import { useContest } from '@/contexts/contest-context';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 // Fix Leaflet default icon paths broken by webpack bundling
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -25,9 +27,9 @@ interface MapUser {
   longitude: number;
 }
 
-function FlyToUser({ position }: { position: [number, number] | null }) {
+function FlyToUser({ position, onDone }: { position: [number, number] | null; onDone: () => void }) {
   const map = useMap();
-  useEffect(() => { if (position) map.flyTo(position, 13); }, [position, map]);
+  useEffect(() => { if (position) { map.flyTo(position, 13); onDone(); } }, [position, map, onDone]);
   return null;
 }
 
@@ -47,7 +49,7 @@ export function MapView() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+  const clearFlyTo = useCallback(() => setFlyTo(null), []);
 
   const fetchData = useCallback(async () => {
     if (!contestId || !apiKey) return;
@@ -63,7 +65,7 @@ export function MapView() {
       const nameMap = Object.fromEntries(ranking.map((r) => [r.user.id, r.user.name]));
       setUsers(mapData.map((u) => ({ ...u, name: nameMap[u.externalUserId] ?? `#${u.externalUserId}` })));
     } catch { /* silent on fetch failure */ }
-  }, [contestId, apiKey, BASE]);
+  }, [contestId, apiKey]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -116,7 +118,7 @@ export function MapView() {
       <div className="flex-1 relative">
         <MapContainer center={[52, 19]} zoom={6} style={{ width: '100%', height: '100%' }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <FlyToUser position={flyTo} />
+          <FlyToUser position={flyTo} onDone={clearFlyTo} />
           {users.map((u) => (
             <Marker
               key={u.externalUserId}
