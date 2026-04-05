@@ -14,6 +14,7 @@ export function ContestActions() {
 
   async function clearContest() {
     if (!contestId) return;
+    if (!apiKey) { setError('Not authenticated'); return; }
     setLoading(true);
     try {
       const res = await fetch(

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Card, CardContent, CardHeader } from '@heroui/react';
 import { useContest } from '@/contexts/contest-context';
 import { useAuth } from '@/contexts/auth-context';
@@ -14,6 +14,12 @@ export function QrGenerator() {
   const [loading, setLoading] = useState(false);
 
   const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
+  useEffect(() => {
+    return () => {
+      if (qrUrl) URL.revokeObjectURL(qrUrl);
+    };
+  }, [qrUrl]);
 
   async function generate() {
     if (!contestId) { setError('Select a contest first'); return; }

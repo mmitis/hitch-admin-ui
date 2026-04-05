@@ -21,6 +21,7 @@ export function QrPdfButton() {
 
   async function generate() {
     if (!contestId) { setError('Select a contest first'); return; }
+    if (!apiKey) { setError('Not authenticated'); return; }
     setError(''); setProgress('Generating… (0/?)');
     const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
     const headers = { Authorization: `ApiKey ${apiKey}` };
@@ -44,6 +45,11 @@ export function QrPdfButton() {
       }
 
       const participantIds = Object.keys(nameMap).map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b);
+      if (participantIds.length === 0) {
+        setError('No registered participants found');
+        setProgress('');
+        return;
+      }
       setProgress(`Generating… (0/${participantIds.length})`);
 
       const { jsPDF } = await import('jspdf');
