@@ -26,6 +26,11 @@ interface MapUser {
   lng: number;
 }
 
+interface MapMeta {
+  startingPosition: { name: string; lat: number; lng: number } | null;
+  targetPosition: { name: string; lat: number; lng: number } | null;
+}
+
 function FlyToUser({ position, onDone }: { position: [number, number] | null; onDone: () => void }) {
   const map = useMap();
   useEffect(() => { if (position) { map.flyTo(position, 13); onDone(); } }, [position, map, onDone]);
@@ -43,6 +48,7 @@ export function MapView() {
   const { contestId } = useContest();
   const router = useRouter();
   const [users, setUsers] = useState<MapUser[]>([]);
+  const [meta, setMeta] = useState<MapMeta>({ startingPosition: null, targetPosition: null });
   const [search, setSearch] = useState('');
   const [liveOn, setLiveOn] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -58,7 +64,11 @@ export function MapView() {
         hitchControllerGetRanking({ path: { contestId } }),
       ]);
 
-      const mapResponse = mapResult.data as { users: MapPositionDto[] } | undefined;
+      const mapResponse = mapResult.data as {
+        users: MapPositionDto[];
+        startingPosition?: { name: string; lat: number; lng: number };
+        targetPosition?: { name: string; lat: number; lng: number };
+      } | undefined;
       const ranking: RankingDto[] = rankResult.data ?? [];
 
       const statusMap = Object.fromEntries(ranking.map((r) => [r.user.id, r.activityStatus]));
@@ -71,6 +81,10 @@ export function MapView() {
         lat: u.position.lat,
         lng: u.position.lng,
       })));
+      setMeta({
+        startingPosition: mapResponse?.startingPosition ?? null,
+        targetPosition: mapResponse?.targetPosition ?? null,
+      });
     } catch { /* silent on fetch failure */ }
   }, [contestId]);
 
@@ -126,6 +140,38 @@ export function MapView() {
         <MapContainer center={[52, 19]} zoom={6} style={{ width: '100%', height: '100%' }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <FlyToUser position={flyTo} onDone={clearFlyTo} />
+
+          {/* Start marker */}
+          {meta.startingPosition && (
+            <Marker
+              position={[meta.startingPosition.lat, meta.startingPosition.lng]}
+              icon={L.divIcon({
+                className: '',
+                html: `<div style="background:#2d6a4f;width:16px;height:16px;border-radius:3px;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:9px;color:white;font-weight:bold">S</div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8],
+              })}
+            >
+              <Popup><strong>Start:</strong> {meta.startingPosition.name}</Popup>
+            </Marker>
+          )}
+
+          {/* Target marker */}
+          {meta.targetPosition && (
+            <Marker
+              position={[meta.targetPosition.lat, meta.targetPosition.lng]}
+              icon={L.divIcon({
+                className: '',
+                html: `<div style="background:#c1121f;width:16px;height:16px;border-radius:3px;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:9px;color:white;font-weight:bold">F</div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8],
+              })}
+            >
+              <Popup><strong>Finish:</strong> {meta.targetPosition.name}</Popup>
+            </Marker>
+          )}
+
+          {/* Participant markers */}
           {users.map((u) => (
             <Marker
               key={u.id}

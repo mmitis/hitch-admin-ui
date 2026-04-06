@@ -10,6 +10,7 @@ import { NewsItem } from './news-item';
 export function NewsList() {
   const { contestId } = useContest();
   const qc = useQueryClient();
+  const [formOpen, setFormOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
 
@@ -34,6 +35,7 @@ export function NewsList() {
       qc.invalidateQueries({ queryKey: ['news', contestId] });
       setNewTitle('');
       setNewDescription('');
+      setFormOpen(false);
     },
   });
 
@@ -45,34 +47,63 @@ export function NewsList() {
 
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
-      {/* Add form */}
-      <div className="bg-white border border-zinc-200 rounded-xl p-4 flex flex-col gap-2">
-        <p className="text-sm font-semibold">Add News Item</p>
-        <input
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          placeholder="Title"
-          className={inputClass}
-        />
-        <textarea
-          value={newDescription}
-          onChange={(e) => setNewDescription(e.target.value)}
-          placeholder="Description"
-          rows={2}
-          className={inputClass}
-        />
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-zinc-700">
+          News {data && data.length > 0 ? `(${data.length})` : ''}
+        </p>
         <button
-          onClick={() => add.mutate()}
-          disabled={add.isPending || !newTitle.trim()}
-          className="self-start px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          onClick={() => setFormOpen((v) => !v)}
+          className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          {add.isPending ? 'Adding…' : 'Add'}
+          {formOpen ? 'Cancel' : '+ New news'}
         </button>
-        {add.isError && <p className="text-xs text-red-600">{String(add.error)}</p>}
       </div>
 
-      {/* News items */}
-      {(data ?? []).map((item) => <NewsItem key={item.id} item={item} />)}
+      {/* Add form (collapsible) */}
+      {formOpen && (
+        <div className="bg-white border border-zinc-200 rounded-xl p-4 flex flex-col gap-2">
+          <input
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            placeholder="Title"
+            className={inputClass}
+            autoFocus
+          />
+          <textarea
+            value={newDescription}
+            onChange={(e) => setNewDescription(e.target.value)}
+            placeholder="Description"
+            rows={3}
+            className={inputClass}
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => add.mutate()}
+              disabled={add.isPending || !newTitle.trim()}
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {add.isPending ? 'Adding…' : 'Add'}
+            </button>
+            <button
+              onClick={() => setFormOpen(false)}
+              className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg hover:bg-zinc-50"
+            >
+              Cancel
+            </button>
+          </div>
+          {add.isError && <p className="text-xs text-red-600">{String(add.error)}</p>}
+        </div>
+      )}
+
+      {/* List */}
+      {data && data.length === 0 ? (
+        <div className="bg-white border border-zinc-200 rounded-xl p-8 text-center">
+          <p className="text-sm text-zinc-400">No news yet. Add the first item above.</p>
+        </div>
+      ) : (
+        (data ?? []).map((item) => <NewsItem key={item.id} item={item} />)
+      )}
     </div>
   );
 }

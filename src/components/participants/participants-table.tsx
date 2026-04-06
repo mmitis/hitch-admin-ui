@@ -11,6 +11,7 @@ import {
   hitchControllerResetUser,
 } from '@/client/sdk.gen';
 import type { RankingDto } from '@/client/types.gen';
+import { UserQrModal } from '@/components/users/user-qr-modal';
 
 const ACTIVITY_COLORS: Record<string, string> = {
   FINISHED: 'bg-green-100 text-green-700',
@@ -19,17 +20,26 @@ const ACTIVITY_COLORS: Record<string, string> = {
   WAITING:  'bg-zinc-100 text-zinc-600',
 };
 
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
 export function ParticipantsTable() {
   const { contestId } = useContest();
   const qc = useQueryClient();
 
-  // Add form
   const [addId, setAddId] = useState('');
   const [addName, setAddName] = useState('');
-
-  // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [search, setSearch] = useState('');
+  const [qrUser, setQrUser] = useState<{ id: string; name: string } | null>(null);
 
   const { data: rows, isLoading, refetch, isFetching } = useQuery<RankingDto[]>({
     queryKey: ['ranking', contestId],
@@ -38,6 +48,11 @@ export function ParticipantsTable() {
       return data ?? [];
     },
     enabled: !!contestId,
+  });
+
+  const filtered = (rows ?? []).filter((r) => {
+    const q = search.toLowerCase();
+    return r.user.name.toLowerCase().includes(q) || r.user.id.includes(q);
   });
 
   const addParticipant = useMutation({
@@ -114,6 +129,9 @@ export function ParticipantsTable() {
             placeholder="Name"
             value={addName}
             onChange={(e) => setAddName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && addId.trim() && addName.trim()) addParticipant.mutate();
+            }}
             className={`flex-1 min-w-[140px] ${inputClass}`}
           />
           <button
@@ -131,16 +149,23 @@ export function ParticipantsTable() {
 
       {/* Table */}
       <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
-          <p className="text-sm font-semibold">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-100">
+          <p className="text-sm font-semibold shrink-0">
             Participants {rows ? `(${rows.length})` : ''}
           </p>
+          <input
+            type="search"
+            placeholder="Search by name or #…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 rounded-md border border-zinc-200 px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
           <button
             onClick={() => refetch()}
             disabled={isFetching}
-            className="px-2 py-1 text-xs border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-50"
+            className="shrink-0 px-2 py-1 text-xs border border-zinc-200 rounded-lg hover:bg-zinc-50 disabled:opacity-50"
           >
-            {isFetching ? '↻ Refreshing…' : '↻ Refresh'}
+            {isFetching ? '↻…' : '↻ Refresh'}
           </button>
         </div>
 
@@ -154,12 +179,13 @@ export function ParticipantsTable() {
                   <th className="px-4 py-2.5">#</th>
                   <th className="px-4 py-2.5">Name</th>
                   <th className="px-4 py-2.5">Status</th>
-                  <th className="px-4 py-2.5">Distance</th>
+                  <th className="px-4 py-2.5">Last location</th>
+                  <th className="px-4 py-2.5">Last update</th>
                   <th className="px-4 py-2.5">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {(rows ?? []).map((row) => (
+                {filtered.map((row) => (
                   <tr key={row.user.id} className="border-b border-zinc-50 hover:bg-zinc-50">
                     <td className="px-4 py-2 text-zinc-500 font-mono text-xs">{row.user.id}</td>
                     <td className="px-4 py-2">
@@ -198,8 +224,13 @@ export function ParticipantsTable() {
                         {row.activityStatus}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-zinc-500 text-xs">
-                      {row.distance != null ? `${row.distance.toFixed(1)} km` : '—'}
+                    <td className="px-4 py-2 text-zinc-400 text-xs font-mono">
+                      {row.position
+                        ? `${row.position.lat.toFixed(4)}, ${row.position.lng.toFixed(4)}`
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-2 text-zinc-400 text-xs">
+                      {row.lastPositionUpdate ? formatRelativeTime(row.lastPositionUpdate) : '—'}
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex gap-1 flex-wrap">
@@ -208,6 +239,12 @@ export function ParticipantsTable() {
                           className="px-2 py-0.5 text-xs border border-zinc-200 rounded hover:bg-zinc-50"
                         >
                           Edit
+                        </button>
+                        <button
+                          onClick={() => setQrUser({ id: row.user.id, name: row.user.name })}
+                          className="px-2 py-0.5 text-xs border border-zinc-200 rounded hover:bg-zinc-50"
+                        >
+                          QR
                         </button>
                         <button
                           onClick={() => { if (window.confirm(`Finish #${row.user.id}?`)) finish.mutate(row.user.id); }}
@@ -227,10 +264,10 @@ export function ParticipantsTable() {
                     </td>
                   </tr>
                 ))}
-                {(rows ?? []).length === 0 && (
+                {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-sm text-zinc-400">
-                      No participants yet.
+                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-zinc-400">
+                      {search ? 'No participants match your search.' : 'No participants yet.'}
                     </td>
                   </tr>
                 )}
@@ -239,6 +276,16 @@ export function ParticipantsTable() {
           </div>
         )}
       </div>
+
+      {contestId && qrUser && (
+        <UserQrModal
+          contestId={contestId}
+          userId={qrUser.id}
+          userName={qrUser.name}
+          isOpen={!!qrUser}
+          onClose={() => setQrUser(null)}
+        />
+      )}
     </div>
   );
 }
