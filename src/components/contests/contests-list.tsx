@@ -10,7 +10,6 @@ import {
 } from '@/client/sdk.gen';
 import type { CurrentContestDto, LogoItemDto } from '@/client/types.gen';
 import { ContestFormModal } from './contest-form-modal';
-import { ScheduleEvents } from './schedule-events';
 import { LogoUploader } from './logo-uploader';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
@@ -108,7 +107,6 @@ export function ContestsList() {
             logoUrl={c.logoUrl ? `${BASE}${c.logoUrl as unknown as string}` : null}
             currentLogoFilename={c.logoFilename}
           />
-          <ScheduleEvents contestId={c.id} />
         </div>
       ))}
 

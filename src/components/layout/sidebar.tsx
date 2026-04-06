@@ -5,19 +5,16 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth-context';
 import { useContest } from '@/contexts/contest-context';
+import { contestControllerGetContestList } from '@/client/sdk.gen';
 
 const NAV_ITEMS = [
-  { href: '/management', label: 'Management', icon: '⚙' },
-  { href: '/users',      label: 'Users',      icon: '👥' },
-  { href: '/news',       label: 'News',        icon: '📰' },
-  { href: '/contests',   label: 'Contests',    icon: '🏆' },
-  { href: '/map',        label: 'Map',         icon: '🗺' },
+  { href: '/participants', label: 'Participants', icon: '👥' },
+  { href: '/qr',          label: 'QR',           icon: '📱' },
+  { href: '/news',        label: 'News',          icon: '📰' },
+  { href: '/contests',    label: 'Contests',      icon: '🏆' },
+  { href: '/schedule',    label: 'Schedule',      icon: '📅' },
+  { href: '/map',         label: 'Map',           icon: '🗺' },
 ];
-
-interface ContestListItem {
-  id: string;
-  name: string;
-}
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -25,14 +22,11 @@ export function Sidebar() {
   const { apiKey, logout } = useAuth();
   const { contestId, setContest } = useContest();
 
-  const { data: contests } = useQuery<ContestListItem[]>({
+  const { data: contests } = useQuery({
     queryKey: ['contest-list'],
     queryFn: async () => {
-      const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000') + '/contest/list',
-        { headers: { Authorization: `ApiKey ${apiKey}` } },
-      );
-      return res.json();
+      const { data } = await contestControllerGetContestList();
+      return data ?? [];
     },
     enabled: !!apiKey,
   });
