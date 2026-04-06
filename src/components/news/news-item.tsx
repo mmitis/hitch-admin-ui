@@ -2,44 +2,39 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/auth-context';
 import { useContest } from '@/contexts/contest-context';
+import { contestControllerUpdateNews, contestControllerDeleteNews } from '@/client/sdk.gen';
+import type { NewsItemDto } from '@/client/types.gen';
 
-interface NewsItemData {
-  id: string;
-  title: string;
-  body: string;
-}
-
-export function NewsItem({ item }: { item: NewsItemData }) {
-  const { apiKey } = useAuth();
+export function NewsItem({ item }: { item: NewsItemDto }) {
   const { contestId } = useContest();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(item.title);
-  const [body, setBody] = useState(item.body);
-
-  const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-  const url = `${BASE}/contest/${encodeURIComponent(contestId!)}/news/${encodeURIComponent(item.id)}`;
-  const authJson = { Authorization: `ApiKey ${apiKey}`, 'Content-Type': 'application/json' };
+  const [description, setDescription] = useState(item.description);
 
   const save = useMutation({
     mutationFn: async () => {
-      const res = await fetch(url, { method: 'PATCH', headers: authJson, body: JSON.stringify({ title, body }) });
-      if (!res.ok) throw new Error(res.statusText);
+      const { error } = await contestControllerUpdateNews({
+        path: { contestId: contestId!, newsId: item.id },
+        body: { title, description },
+      });
+      if (error) throw new Error('Failed to save');
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['news', contestId] }); setEditing(false); },
   });
 
   const remove = useMutation({
     mutationFn: async () => {
-      const res = await fetch(url, { method: 'DELETE', headers: { Authorization: `ApiKey ${apiKey}` } });
-      if (!res.ok) throw new Error(res.statusText);
+      const { error } = await contestControllerDeleteNews({
+        path: { contestId: contestId!, newsId: item.id },
+      });
+      if (error) throw new Error('Failed to delete');
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['news', contestId] }),
   });
 
-  const inputClass = "w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500";
+  const inputClass = 'w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500';
 
   return (
     <div className="bg-white border border-zinc-200 rounded-xl p-4 flex flex-col gap-2">
@@ -52,9 +47,9 @@ export function NewsItem({ item }: { item: NewsItemData }) {
             className={inputClass}
           />
           <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Body"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Description"
             rows={3}
             className={inputClass}
           />
@@ -67,7 +62,7 @@ export function NewsItem({ item }: { item: NewsItemData }) {
               {save.isPending ? 'Saving…' : 'Save'}
             </button>
             <button
-              onClick={() => { setTitle(item.title); setBody(item.body); setEditing(false); }}
+              onClick={() => { setTitle(item.title); setDescription(item.description); setEditing(false); }}
               className="px-3 py-1.5 text-sm border border-zinc-200 rounded-lg hover:bg-zinc-50"
             >
               Cancel
@@ -78,7 +73,7 @@ export function NewsItem({ item }: { item: NewsItemData }) {
       ) : (
         <>
           <p className="text-sm font-semibold">{item.title}</p>
-          <p className="text-xs text-zinc-500 whitespace-pre-wrap">{item.body}</p>
+          <p className="text-xs text-zinc-500 whitespace-pre-wrap">{item.description}</p>
           <div className="flex gap-2">
             <button
               onClick={() => setEditing(true)}

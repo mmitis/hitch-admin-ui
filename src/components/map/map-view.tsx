@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/auth-context';
 import { useContest } from '@/contexts/contest-context';
+import { hitchControllerGetMapPositionsAdmin, hitchControllerGetRanking } from '@/client/sdk.gen';
+import type { MapPositionDto, RankingDto } from '@/client/types.gen';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 // Fix Leaflet default icon paths broken by webpack bundling
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,11 +19,11 @@ L.Icon.Default.mergeOptions({
 });
 
 interface MapUser {
-  externalUserId: string;
+  id: string;
   name: string;
-  status: string;
-  latitude: number;
-  longitude: number;
+  activityStatus: string;
+  lat: number;
+  lng: number;
 }
 
 function FlyToUser({ position, onDone }: { position: [number, number] | null; onDone: () => void }) {
@@ -35,12 +34,12 @@ function FlyToUser({ position, onDone }: { position: [number, number] | null; on
 
 function statusColor(status: string) {
   if (status === 'FINISHED') return '#38a169';
-  if (status === 'ACTIVE') return '#3182ce';
+  if (status === 'ON_ROAD') return '#3182ce';
+  if (status === 'INACTIVE') return '#d69e2e';
   return '#718096';
 }
 
 export function MapView() {
-  const { apiKey } = useAuth();
   const { contestId } = useContest();
   const router = useRouter();
   const [users, setUsers] = useState<MapUser[]>([]);
@@ -52,20 +51,28 @@ export function MapView() {
   const clearFlyTo = useCallback(() => setFlyTo(null), []);
 
   const fetchData = useCallback(async () => {
-    if (!contestId || !apiKey) return;
-    const headers = { Authorization: `ApiKey ${apiKey}` };
+    if (!contestId) return;
     try {
-      const [mapRes, rankRes] = await Promise.all([
-        fetch(`${BASE}/hitch/contest/${encodeURIComponent(contestId)}/map/admin`, { headers }),
-        fetch(`${BASE}/hitch/contest/${encodeURIComponent(contestId)}/ranking`, { headers }),
+      const [mapResult, rankResult] = await Promise.all([
+        hitchControllerGetMapPositionsAdmin({ path: { contestId }, headers: { Authorization: '' } }),
+        hitchControllerGetRanking({ path: { contestId } }),
       ]);
-      const mapData: Array<{ externalUserId: string; latitude: number; longitude: number; status: string }> =
-        mapRes.ok ? await mapRes.json() : [];
-      const ranking: Array<{ user: { id: string; name: string } }> = rankRes.ok ? await rankRes.json() : [];
-      const nameMap = Object.fromEntries(ranking.map((r) => [r.user.id, r.user.name]));
-      setUsers(mapData.map((u) => ({ ...u, name: nameMap[u.externalUserId] ?? `#${u.externalUserId}` })));
+
+      const mapResponse = mapResult.data as { users: MapPositionDto[] } | undefined;
+      const ranking: RankingDto[] = rankResult.data ?? [];
+
+      const statusMap = Object.fromEntries(ranking.map((r) => [r.user.id, r.activityStatus]));
+      const positions = mapResponse?.users ?? [];
+
+      setUsers(positions.map((u) => ({
+        id: u.user.id,
+        name: u.user.name,
+        activityStatus: statusMap[u.user.id] ?? 'WAITING',
+        lat: u.position.lat,
+        lng: u.position.lng,
+      })));
     } catch { /* silent on fetch failure */ }
-  }, [contestId, apiKey]);
+  }, [contestId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -79,7 +86,7 @@ export function MapView() {
   }, [liveOn, fetchData]);
 
   const filtered = users.filter(
-    (u) => u.name.toLowerCase().includes(search.toLowerCase()) || u.externalUserId.includes(search),
+    (u) => u.name.toLowerCase().includes(search.toLowerCase()) || u.id.includes(search),
   );
 
   return (
@@ -99,15 +106,15 @@ export function MapView() {
           <ul className="flex-1 overflow-auto divide-y divide-zinc-50">
             {filtered.map((u) => (
               <li
-                key={u.externalUserId}
+                key={u.id}
                 className="px-3 py-2 cursor-pointer hover:bg-zinc-50 text-sm flex items-center justify-between"
-                onClick={() => setFlyTo([u.latitude, u.longitude])}
+                onClick={() => setFlyTo([u.lat, u.lng])}
               >
                 <span>
-                  <span className="font-medium">#{u.externalUserId}</span>
+                  <span className="font-medium">#{u.id}</span>
                   <span className="text-zinc-500 ml-1">{u.name}</span>
                 </span>
-                <span className="text-[10px]" style={{ color: statusColor(u.status) }}>{u.status}</span>
+                <span className="text-[10px]" style={{ color: statusColor(u.activityStatus) }}>{u.activityStatus}</span>
               </li>
             ))}
           </ul>
@@ -121,18 +128,18 @@ export function MapView() {
           <FlyToUser position={flyTo} onDone={clearFlyTo} />
           {users.map((u) => (
             <Marker
-              key={u.externalUserId}
-              position={[u.latitude, u.longitude]}
+              key={u.id}
+              position={[u.lat, u.lng]}
               icon={L.divIcon({
                 className: '',
-                html: `<div style="background:${statusColor(u.status)};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>`,
+                html: `<div style="background:${statusColor(u.activityStatus)};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>`,
                 iconSize: [12, 12],
                 iconAnchor: [6, 6],
               })}
             >
               <Popup>
-                <strong>#{u.externalUserId}</strong> {u.name}<br />
-                <span style={{ color: statusColor(u.status) }}>{u.status}</span>
+                <strong>#{u.id}</strong> {u.name}<br />
+                <span style={{ color: statusColor(u.activityStatus) }}>{u.activityStatus}</span>
               </Popup>
             </Marker>
           ))}

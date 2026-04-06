@@ -2,51 +2,42 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/auth-context';
 import { useContest } from '@/contexts/contest-context';
+import { contestControllerGetNews, contestControllerAddNews } from '@/client/sdk.gen';
+import type { NewsItemDto } from '@/client/types.gen';
 import { NewsItem } from './news-item';
 
-interface NewsItemData { id: string; title: string; body: string; }
-
 export function NewsList() {
-  const { apiKey } = useAuth();
   const { contestId } = useContest();
   const qc = useQueryClient();
   const [newTitle, setNewTitle] = useState('');
-  const [newBody, setNewBody] = useState('');
+  const [newDescription, setNewDescription] = useState('');
 
-  const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-  const newsUrl = `${BASE}/contest/${encodeURIComponent(contestId ?? '')}/news`;
-  const authHeader = { Authorization: `ApiKey ${apiKey}` };
-  const authJson = { ...authHeader, 'Content-Type': 'application/json' };
-
-  const { data, isLoading, isError } = useQuery<NewsItemData[]>({
+  const { data, isLoading, isError } = useQuery<NewsItemDto[]>({
     queryKey: ['news', contestId],
     queryFn: async () => {
-      const res = await fetch(newsUrl, { headers: authHeader });
-      if (!res.ok) throw new Error(res.statusText);
-      return res.json();
+      const { data } = await contestControllerGetNews({ path: { contestId: contestId! } });
+      return data ?? [];
     },
-    enabled: !!contestId && !!apiKey,
+    enabled: !!contestId,
   });
 
   const add = useMutation({
     mutationFn: async () => {
-      const res = await fetch(newsUrl, {
-        method: 'POST',
-        headers: authJson,
-        body: JSON.stringify({ title: newTitle, body: newBody }),
+      const { error } = await contestControllerAddNews({
+        path: { contestId: contestId! },
+        body: { title: newTitle, description: newDescription },
       });
-      if (!res.ok) throw new Error(res.statusText);
+      if (error) throw new Error('Failed to add news');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['news', contestId] });
       setNewTitle('');
-      setNewBody('');
+      setNewDescription('');
     },
   });
 
-  const inputClass = "w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500";
+  const inputClass = 'w-full rounded-md border border-zinc-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500';
 
   if (!contestId) return <p className="text-sm text-zinc-400">Select a contest first.</p>;
   if (isLoading) return <p className="text-sm text-zinc-400">Loading…</p>;
@@ -64,9 +55,9 @@ export function NewsList() {
           className={inputClass}
         />
         <textarea
-          value={newBody}
-          onChange={(e) => setNewBody(e.target.value)}
-          placeholder="Body"
+          value={newDescription}
+          onChange={(e) => setNewDescription(e.target.value)}
+          placeholder="Description"
           rows={2}
           className={inputClass}
         />

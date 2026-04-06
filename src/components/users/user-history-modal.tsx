@@ -1,16 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/auth-context';
-
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-
-interface HistoryEntry {
-  latitude: number;
-  longitude: number;
-  timestamp: string;
-  status: string;
-}
+import { hitchControllerGetUserHistoryAdmin } from '@/client/sdk.gen';
+import type { PositionHistoryDto } from '@/client/types.gen';
 
 interface Props {
   contestId: string;
@@ -21,18 +13,16 @@ interface Props {
 }
 
 export function UserHistoryModal({ contestId, userId, userName, isOpen, onClose }: Props) {
-  const { apiKey } = useAuth();
-
-  const { data, isLoading } = useQuery<HistoryEntry[]>({
+  const { data, isLoading } = useQuery<PositionHistoryDto[]>({
     queryKey: ['user-history', contestId, userId],
     queryFn: async () => {
-      const res = await fetch(
-        `${BASE}/hitch/contest/${encodeURIComponent(contestId)}/history/${encodeURIComponent(userId)}`,
-        { headers: { Authorization: `ApiKey ${apiKey}` } },
-      );
-      return res.json();
+      const { data } = await hitchControllerGetUserHistoryAdmin({
+        path: { contestId, userId },
+        headers: { Authorization: '' },
+      });
+      return data ?? [];
     },
-    enabled: isOpen && !!contestId && !!userId && !!apiKey,
+    enabled: isOpen && !!contestId && !!userId,
   });
 
   if (!isOpen) return null;
@@ -52,7 +42,7 @@ export function UserHistoryModal({ contestId, userId, userName, isOpen, onClose 
           {(data ?? []).map((entry, i) => (
             <div key={i} className="text-xs border-b border-zinc-100 py-1.5">
               <span className="font-medium">{new Date(entry.timestamp).toLocaleString()}</span>
-              {' — '}{entry.status} — {entry.latitude.toFixed(5)}, {entry.longitude.toFixed(5)}
+              {' — '}{entry.position.lat.toFixed(5)}, {entry.position.lng.toFixed(5)}
             </div>
           ))}
         </div>

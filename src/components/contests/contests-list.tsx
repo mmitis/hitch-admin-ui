@@ -2,55 +2,59 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/auth-context';
+import {
+  contestControllerGetContestList,
+  contestControllerGetContestById,
+  contestControllerGetLogos,
+  contestControllerDeleteContest,
+} from '@/client/sdk.gen';
+import type { CurrentContestDto, LogoItemDto } from '@/client/types.gen';
 import { ContestFormModal } from './contest-form-modal';
 import { ScheduleEvents } from './schedule-events';
 import { LogoUploader } from './logo-uploader';
 
-interface ContestItem {
-  id: string;
-  name: string;
-  dateStart: string;
-  dateEnd: string;
-  startingPosition?: { name: string };
-  targetPosition?: { name: string };
-  logoUrl?: string | null;
-  currentLogo?: string | null;
-}
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
+type ContestWithLogo = CurrentContestDto & { logoFilename: string | null };
 
 export function ContestsList() {
-  const { apiKey } = useAuth();
   const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<ContestItem | undefined>(undefined);
+  const [editing, setEditing] = useState<CurrentContestDto | undefined>(undefined);
   const [deleteError, setDeleteError] = useState('');
 
-  const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-  const authHeader = { Authorization: `ApiKey ${apiKey}` };
-
-  const { data: contests, isLoading } = useQuery<ContestItem[]>({
+  const { data: contests, isLoading } = useQuery<ContestWithLogo[]>({
     queryKey: ['contests'],
     queryFn: async () => {
-      const [listRes, logosRes] = await Promise.all([
-        fetch(`${BASE}/contest/list`, { headers: authHeader }),
-        fetch(`${BASE}/contest/logos`, { headers: authHeader }),
+      const [listResult, logosResult] = await Promise.all([
+        contestControllerGetContestList(),
+        contestControllerGetLogos(),
       ]);
-      if (!listRes.ok) throw new Error(listRes.statusText);
-      const list: ContestItem[] = await listRes.json();
-      const logos: Record<string, string> = logosRes.ok ? await logosRes.json() : {};
-      return list.map((c) => ({
+      const list = listResult.data ?? [];
+      const logos: LogoItemDto[] = logosResult.data ?? [];
+
+      const details = await Promise.all(
+        list.map(async (c) => {
+          const { data } = await contestControllerGetContestById({ path: { contestId: c.id } });
+          return data!;
+        }),
+      );
+
+      const logoUrlToFilename = Object.fromEntries(
+        logos.map((l) => [`/resources/${l.filename}`, l.filename]),
+      );
+
+      return details.map((c) => ({
         ...c,
-        logoUrl: logos[c.id] ?? null,
-        currentLogo: logos[c.id] ? logos[c.id].split('/').pop() ?? null : null,
+        logoFilename: c.logoUrl ? logoUrlToFilename[c.logoUrl as unknown as string] ?? null : null,
       }));
     },
-    enabled: !!apiKey,
   });
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`${BASE}/contest/${encodeURIComponent(id)}`, { method: 'DELETE', headers: authHeader });
-      if (!res.ok) throw new Error(res.statusText);
+      const { error } = await contestControllerDeleteContest({ path: { contestId: id } });
+      if (error) throw new Error('Delete failed');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['contests'] });
@@ -99,7 +103,11 @@ export function ContestsList() {
               </button>
             </div>
           </div>
-          <LogoUploader contestId={c.id} logoUrl={c.logoUrl} currentLogo={c.currentLogo} />
+          <LogoUploader
+            contestId={c.id}
+            logoUrl={c.logoUrl ? `${BASE}${c.logoUrl as unknown as string}` : null}
+            currentLogoFilename={c.logoFilename}
+          />
           <ScheduleEvents contestId={c.id} />
         </div>
       ))}

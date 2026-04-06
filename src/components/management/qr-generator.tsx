@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { Button, Card, CardContent, CardHeader } from '@heroui/react';
 import { useContest } from '@/contexts/contest-context';
 import { useAuth } from '@/contexts/auth-context';
+import { contestControllerPrepopulateRandomly } from '@/client/sdk.gen';
+
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 export function QrGenerator() {
   const { contestId } = useContest();
@@ -12,8 +15,6 @@ export function QrGenerator() {
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
   useEffect(() => {
     return () => {
@@ -26,6 +27,7 @@ export function QrGenerator() {
     if (!userId.trim()) { setError('Enter a user number'); return; }
     setError(''); setLoading(true);
     try {
+      // QR endpoint returns PNG binary — use raw fetch with blob parsing
       const res = await fetch(
         `${BASE}/contest/${encodeURIComponent(contestId)}/qr?userId=${encodeURIComponent(userId)}`,
         { headers: { Authorization: `ApiKey ${apiKey}` } },
@@ -44,11 +46,8 @@ export function QrGenerator() {
     if (!contestId) { setError('Select a contest first'); return; }
     setError(''); setLoading(true);
     try {
-      const res = await fetch(
-        `${BASE}/contest/${encodeURIComponent(contestId)}/prepopulate-randomly`,
-        { method: 'POST', headers: { Authorization: `ApiKey ${apiKey}` } },
-      );
-      if (!res.ok) throw new Error(res.statusText);
+      const { error: err } = await contestControllerPrepopulateRandomly({ path: { contestId } });
+      if (err) throw new Error('Failed to prepopulate');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed');
     } finally {

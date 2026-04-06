@@ -4,13 +4,10 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button, Card, CardContent, CardHeader } from '@heroui/react';
 import { useContest } from '@/contexts/contest-context';
-import { useAuth } from '@/contexts/auth-context';
-
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+import { hitchControllerClearContest } from '@/client/sdk.gen';
 
 export function ContestActions() {
   const { contestId, clearContest } = useContest();
-  const { apiKey } = useAuth();
   const qc = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,15 +15,11 @@ export function ContestActions() {
 
   async function handleClear() {
     if (!contestId) return;
-    if (!apiKey) { setError('Not authenticated'); return; }
     setLoading(true);
     try {
-      const res = await fetch(
-        `${BASE}/hitch/contest/${encodeURIComponent(contestId)}/clear`,
-        { method: 'POST', headers: { Authorization: `ApiKey ${apiKey}` } },
-      );
-      if (!res.ok) throw new Error(res.statusText);
-      qc.invalidateQueries({ queryKey: ['participants', contestId] });
+      const { error: err } = await hitchControllerClearContest({ path: { contestId }, headers: { Authorization: '' } });
+      if (err) throw new Error('Failed to clear contest');
+      qc.invalidateQueries({ queryKey: ['ranking', contestId] });
       clearContest();
       setIsOpen(false);
     } catch (e) {

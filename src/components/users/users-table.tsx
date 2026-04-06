@@ -1,73 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/auth-context';
+import { useQuery } from '@tanstack/react-query';
 import { useContest } from '@/contexts/contest-context';
+import { contestControllerGetRanking } from '@/client/sdk.gen';
+import type { RankingDto } from '@/client/types.gen';
 import { UserHistoryModal } from './user-history-modal';
 import { UserQrModal } from './user-qr-modal';
 
-interface Participant {
-  id: string;
-  name: string;
-  externalUserId: string;
-  status: string;
-}
-
-type ParticipantWithRankName = Participant & { rankName: string };
-
-const STATUS_COLORS: Record<string, string> = {
+const ACTIVITY_COLORS: Record<string, string> = {
   FINISHED: 'bg-green-100 text-green-700',
-  ACTIVE: 'bg-blue-100 text-blue-700',
-  DEFAULT: 'bg-zinc-100 text-zinc-600',
+  ON_ROAD: 'bg-blue-100 text-blue-700',
+  INACTIVE: 'bg-yellow-100 text-yellow-700',
+  WAITING: 'bg-zinc-100 text-zinc-600',
 };
 
 export function UsersTable() {
-  const { apiKey } = useAuth();
   const { contestId } = useContest();
-  const qc = useQueryClient();
-  const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-  const authHeader = { Authorization: `ApiKey ${apiKey}` };
-
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
   const [historyUser, setHistoryUser] = useState<{ id: string; name: string } | null>(null);
   const [qrUser, setQrUser] = useState<{ id: string; name: string } | null>(null);
 
-  const { data: rows, isLoading } = useQuery<ParticipantWithRankName[]>({
-    queryKey: ['participants', contestId],
+  const { data: rows, isLoading } = useQuery<RankingDto[]>({
+    queryKey: ['ranking', contestId],
     queryFn: async () => {
-      const [pRes, rRes] = await Promise.all([
-        fetch(`${BASE}/contest/${encodeURIComponent(contestId!)}/participants`, { headers: authHeader }),
-        fetch(`${BASE}/hitch/contest/${encodeURIComponent(contestId!)}/ranking`, { headers: authHeader }),
-      ]);
-      const participants: Participant[] = pRes.ok ? await pRes.json() : [];
-      const ranking: Array<{ user: { id: string; name: string } }> = rRes.ok ? await rRes.json() : [];
-      const nameMap = Object.fromEntries(ranking.map((r) => [r.user.id, r.user.name]));
-      return participants.map((p) => ({ ...p, rankName: nameMap[p.externalUserId] ?? p.name }));
+      const { data } = await contestControllerGetRanking({ path: { contestId: contestId! } });
+      return data ?? [];
     },
-    enabled: !!contestId && !!apiKey,
+    enabled: !!contestId,
   });
 
-  const saveName = useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      const res = await fetch(
-        `${BASE}/contest/${encodeURIComponent(contestId!)}/participants/${encodeURIComponent(id)}`,
-        {
-          method: 'PATCH',
-          headers: { ...authHeader, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name }),
-        },
-      );
-      if (!res.ok) throw new Error(res.statusText);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['participants', contestId] });
-      setEditingId(null);
-    },
-  });
-
-  const statusClass = (s: string) => STATUS_COLORS[s] ?? STATUS_COLORS.DEFAULT;
+  const activityClass = (s: string) => ACTIVITY_COLORS[s] ?? ACTIVITY_COLORS.WAITING;
 
   if (!contestId) return <p className="text-sm text-zinc-400">Select a contest first.</p>;
   if (isLoading) return <p className="text-sm text-zinc-400">Loading…</p>;
@@ -81,60 +43,33 @@ export function UsersTable() {
               <th className="pb-2 pr-4">#</th>
               <th className="pb-2 pr-4">Name</th>
               <th className="pb-2 pr-4">Status</th>
+              <th className="pb-2 pr-4">Distance</th>
               <th className="pb-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {(rows ?? []).map((row) => (
-              <tr key={row.id} className="border-b border-zinc-100 hover:bg-zinc-50">
-                <td className="py-2 pr-4 text-zinc-500">{row.externalUserId}</td>
+              <tr key={row.user.id} className="border-b border-zinc-100 hover:bg-zinc-50">
+                <td className="py-2 pr-4 text-zinc-500">{row.user.id}</td>
+                <td className="py-2 pr-4 font-medium">{row.user.name}</td>
                 <td className="py-2 pr-4">
-                  {editingId === row.id ? (
-                    <div className="flex gap-1 items-center">
-                      <input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="rounded border border-zinc-200 px-2 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => saveName.mutate({ id: row.id, name: editName })}
-                        disabled={saveName.isPending}
-                        className="px-2 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        {saveName.isPending ? '…' : 'Save'}
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className="px-2 py-0.5 text-xs border border-zinc-200 rounded hover:bg-zinc-50"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={() => { setEditingId(row.id); setEditName(row.rankName); }}
-                    >
-                      {row.rankName}
-                    </span>
-                  )}
-                </td>
-                <td className="py-2 pr-4">
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusClass(row.status)}`}>
-                    {row.status}
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${activityClass(row.activityStatus)}`}>
+                    {row.activityStatus}
                   </span>
+                </td>
+                <td className="py-2 pr-4 text-zinc-500">
+                  {row.distance != null ? `${row.distance.toFixed(1)} km` : '—'}
                 </td>
                 <td className="py-2">
                   <div className="flex gap-1">
                     <button
-                      onClick={() => setHistoryUser({ id: row.externalUserId, name: row.rankName })}
+                      onClick={() => setHistoryUser({ id: row.user.id, name: row.user.name })}
                       className="px-2 py-0.5 text-xs border border-zinc-200 rounded hover:bg-zinc-50"
                     >
                       History
                     </button>
                     <button
-                      onClick={() => setQrUser({ id: row.externalUserId, name: row.rankName })}
+                      onClick={() => setQrUser({ id: row.user.id, name: row.user.name })}
                       className="px-2 py-0.5 text-xs border border-zinc-200 rounded hover:bg-zinc-50"
                     >
                       QR

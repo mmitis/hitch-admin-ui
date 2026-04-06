@@ -3,11 +3,14 @@
 import { useState } from 'react';
 import { Button, Card, CardContent, CardHeader } from '@heroui/react';
 import { useContest } from '@/contexts/contest-context';
-import { useAuth } from '@/contexts/auth-context';
+import {
+  contestControllerAddParticipant,
+  hitchControllerFinishContest,
+  hitchControllerResetUser,
+} from '@/client/sdk.gen';
 
 export function ParticipantActions() {
   const { contestId } = useContest();
-  const { apiKey } = useAuth();
   const [addId, setAddId] = useState('');
   const [addName, setAddName] = useState('');
   const [finishId, setFinishId] = useState('');
@@ -15,22 +18,18 @@ export function ParticipantActions() {
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
 
-  const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-
-  const inputClass = "w-full rounded-md border border-zinc-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500";
+  const inputClass = 'w-full rounded-md border border-zinc-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500';
 
   async function addParticipant() {
     if (!contestId) { setError('Select a contest first'); return; }
     if (!addId.trim() || !addName.trim()) { setError('Enter user number and name'); return; }
-    if (!apiKey) { setError('Not authenticated'); return; }
     setMsg(''); setError('');
     try {
-      const res = await fetch(`${BASE}/contest/${encodeURIComponent(contestId)}/participants`, {
-        method: 'POST',
-        headers: { Authorization: `ApiKey ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: addId, name: addName }),
+      const { error: err } = await contestControllerAddParticipant({
+        path: { contestId },
+        body: { userId: addId, name: addName },
       });
-      if (!res.ok) throw new Error(res.statusText);
+      if (err) throw new Error('Failed to add participant');
       setMsg(`#${addId} added`);
       setAddId(''); setAddName('');
     } catch (e) {
@@ -41,14 +40,13 @@ export function ParticipantActions() {
   async function finish() {
     if (!contestId) { setError('Select a contest first'); return; }
     if (!finishId.trim()) { setError('Enter a user number'); return; }
-    if (!apiKey) { setError('Not authenticated'); return; }
     setMsg(''); setError('');
     try {
-      const res = await fetch(
-        `${BASE}/hitch/contest/${encodeURIComponent(contestId)}/finish/${encodeURIComponent(finishId)}`,
-        { method: 'POST', headers: { Authorization: `ApiKey ${apiKey}` } },
-      );
-      if (!res.ok) throw new Error(res.statusText);
+      const { error: err } = await hitchControllerFinishContest({
+        path: { contestId, userId: finishId },
+        headers: { Authorization: '' },
+      });
+      if (err) throw new Error('Failed to finish user');
       setMsg(`#${finishId} finished`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed');
@@ -58,14 +56,13 @@ export function ParticipantActions() {
   async function reset() {
     if (!contestId) { setError('Select a contest first'); return; }
     if (!resetId.trim()) { setError('Enter a user number'); return; }
-    if (!apiKey) { setError('Not authenticated'); return; }
     setMsg(''); setError('');
     try {
-      const res = await fetch(
-        `${BASE}/hitch/contest/${encodeURIComponent(contestId)}/reset/${encodeURIComponent(resetId)}`,
-        { method: 'POST', headers: { Authorization: `ApiKey ${apiKey}` } },
-      );
-      if (!res.ok) throw new Error(res.statusText);
+      const { error: err } = await hitchControllerResetUser({
+        path: { contestId, userId: resetId },
+        headers: { Authorization: '' },
+      });
+      if (err) throw new Error('Failed to reset user');
       setMsg(`#${resetId} reset`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed');
