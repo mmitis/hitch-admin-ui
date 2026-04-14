@@ -7,10 +7,21 @@ import { useAuth } from '@/contexts/auth-context';
 
 function formatContestDate(isoString: string): string {
   const d = new Date(isoString);
-  const months = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paź','lis','gru'];
+  const months = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paz','lis','gru'];
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${hh}:${mm}`;
+}
+
+const POLISH_MAP: Record<string, string> = {
+  'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n',
+  'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
+  'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N',
+  'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z',
+};
+
+function stripPolish(text: string): string {
+  return text.replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, (ch) => POLISH_MAP[ch] ?? ch);
 }
 
 async function loadFontAsBase64(path: string): Promise<string> {
@@ -93,7 +104,7 @@ export function QrPdfButton() {
 
         // Participant name
         doc.setFont('Roboto', 'bold'); doc.setFontSize(22); doc.setTextColor(40);
-        doc.text(nameMap[String(n)] ?? '—', MARGIN, MARGIN + 100);
+        doc.text(stripPolish(nameMap[String(n)] ?? '—'), MARGIN, MARGIN + 100);
 
         // Separator line
         doc.setDrawColor(180); doc.setLineWidth(0.5);
@@ -101,11 +112,11 @@ export function QrPdfButton() {
 
         // Contest info block
         doc.setFont('Roboto', 'bold'); doc.setFontSize(13); doc.setTextColor(0);
-        doc.text(contestName, MARGIN, MARGIN + 140);
+        doc.text(stripPolish(contestName), MARGIN, MARGIN + 140);
         doc.setFont('Roboto', 'normal'); doc.setFontSize(11); doc.setTextColor(60);
-        doc.text(destination, MARGIN, MARGIN + 158);
+        doc.text(stripPolish(destination), MARGIN, MARGIN + 158);
         doc.setTextColor(100);
-        doc.text(dateLabel, MARGIN, MARGIN + 174);
+        doc.text(stripPolish(dateLabel), MARGIN, MARGIN + 174);
 
         // QR code
         try {
