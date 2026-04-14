@@ -110,9 +110,9 @@ export type RankingDto = {
         [key: string]: unknown;
     } | null;
     /**
-     * Timestamp of last position update
+     * Timestamp of last position update (null if never updated)
      */
-    lastPositionUpdate: string;
+    lastPositionUpdate: string | null;
     /**
      * Distance in kilometers from the contest target
      */
