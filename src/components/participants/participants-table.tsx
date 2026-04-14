@@ -16,10 +16,11 @@ import { UserQrModal } from '@/components/users/user-qr-modal';
 import { UserHistoryModal } from '@/components/users/user-history-modal';
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  FINISHED: 'bg-green-100 text-green-700',
-  ON_ROAD:  'bg-blue-100 text-blue-700',
-  INACTIVE: 'bg-yellow-100 text-yellow-700',
-  WAITING:  'bg-zinc-100 text-zinc-600',
+  FINISHED:    'bg-green-100 text-green-700',
+  ON_ROAD:     'bg-blue-100 text-blue-700',
+  INACTIVE:    'bg-yellow-100 text-yellow-700',
+  WAITING:     'bg-zinc-100 text-zinc-600',
+  NOT_STARTED: 'bg-purple-100 text-purple-700',
 };
 
 function formatRelativeTime(iso: string): string {
@@ -234,9 +235,14 @@ export function ParticipantsTable() {
                       )}
                     </td>
                     <td className="px-4 py-2">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${ACTIVITY_COLORS[row.activityStatus] ?? ACTIVITY_COLORS.WAITING}`}>
-                        {row.activityStatus}
-                      </span>
+                      {(() => {
+                        const displayStatus = row.lastPositionUpdate ? row.activityStatus : 'NOT_STARTED';
+                        return (
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${ACTIVITY_COLORS[displayStatus] ?? ACTIVITY_COLORS.WAITING}`}>
+                            {displayStatus.replace('_', ' ')}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-2 text-zinc-400 text-xs font-mono">
                       {row.position
