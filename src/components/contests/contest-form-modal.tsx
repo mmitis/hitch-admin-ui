@@ -11,6 +11,12 @@ interface Props {
   initial?: CurrentContestDto;
 }
 
+function toLocalDatetimeLocal(isoString: string): string {
+  const d = new Date(isoString);
+  const offset = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+}
+
 export function ContestFormModal({ isOpen, onClose, initial }: Props) {
   const qc = useQueryClient();
   const [id, setId] = useState('');
@@ -31,8 +37,8 @@ export function ContestFormModal({ isOpen, onClose, initial }: Props) {
     setId(initial?.id ?? '');
     setName(initial?.name ?? '');
     setMembers(String(initial?.members ?? 30));
-    setDateStart(initial?.dateStart?.slice(0, 16) ?? '');
-    setDateEnd(initial?.dateEnd?.slice(0, 16) ?? '');
+    setDateStart(initial?.dateStart ? toLocalDatetimeLocal(initial.dateStart) : '');
+    setDateEnd(initial?.dateEnd ? toLocalDatetimeLocal(initial.dateEnd) : '');
     setStartName(initial?.startingPosition?.name ?? '');
     setStartLat(String(initial?.startingPosition?.lat ?? ''));
     setStartLng(String(initial?.startingPosition?.lng ?? ''));
