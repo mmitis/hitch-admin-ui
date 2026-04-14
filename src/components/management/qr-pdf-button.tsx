@@ -13,14 +13,6 @@ function stripPolish(text: string): string {
   return text.replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, ch => map[ch] ?? ch);
 }
 
-function formatContestDate(isoString: string): string {
-  const d = new Date(isoString);
-  const months = ['sty','lut','mar','kwi','maj','cze','lip','sie','wrz','paz','lis','gru'];
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mm = String(d.getMinutes()).padStart(2, '0');
-  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${hh}:${mm}`;
-}
-
 async function loadFontAsBase64(path: string): Promise<string> {
   const res = await fetch(path);
   const buf = await res.arrayBuffer();
@@ -28,6 +20,27 @@ async function loadFontAsBase64(path: string): Promise<string> {
   let binary = '';
   for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
   return btoa(binary);
+}
+
+async function loadSvgAsPng(path: string, size: number): Promise<string> {
+  const res = await fetch(path);
+  const svgText = await res.text();
+  const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
 }
 
 export function QrPdfButton() {
@@ -53,7 +66,6 @@ export function QrPdfButton() {
       const contest = await contestRes.json();
       const destination: string = contest.targetPosition?.name ?? '?';
       const contestName: string = contest.name;
-      const dateLabel = formatContestDate(contest.dateStart as string);
 
       const nameMap: Record<string, string> = {};
       if (rankRes.ok) {
@@ -70,9 +82,10 @@ export function QrPdfButton() {
       setProgress(`Loading fonts…`);
 
       const { jsPDF } = await import('jspdf');
-      const [fontRegular, fontBold] = await Promise.all([
+      const [fontRegular, fontBold, logoPng] = await Promise.all([
         loadFontAsBase64('/fonts/Roboto-Regular.ttf'),
         loadFontAsBase64('/fonts/Roboto-Bold.ttf'),
+        loadSvgAsPng('/logo-bw.svg', 256),
       ]);
 
       const doc = new jsPDF({ format: 'a4', orientation: 'portrait', unit: 'pt' });
@@ -112,8 +125,10 @@ export function QrPdfButton() {
         doc.text(stripPolish(contestName), MARGIN, MARGIN + 140);
         doc.setFont('Roboto', 'normal'); doc.setFontSize(11); doc.setTextColor(60);
         doc.text(stripPolish(destination), MARGIN, MARGIN + 158);
-        doc.setTextColor(100);
-        doc.text(stripPolish(dateLabel), MARGIN, MARGIN + 174);
+
+        // Logo at bottom-left
+        const LOGO_SIZE = 60;
+        doc.addImage(logoPng, 'PNG', MARGIN, PAGE_H - MARGIN - LOGO_SIZE, LOGO_SIZE, LOGO_SIZE);
 
         // QR code
         try {
