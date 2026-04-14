@@ -722,6 +722,46 @@ export type HitchControllerResetUserResponses = {
     200: unknown;
 };
 
+export type HitchControllerDeleteParticipantData = {
+    body?: never;
+    headers: {
+        /**
+         * API Key (format: ApiKey <key>)
+         */
+        Authorization: string;
+    };
+    path: {
+        /**
+         * Contest ID
+         */
+        contestId: string;
+        /**
+         * User ID to delete
+         */
+        userId: string;
+    };
+    query?: never;
+    url: '/hitch/contest/{contestId}/participant/{userId}';
+};
+
+export type HitchControllerDeleteParticipantErrors = {
+    /**
+     * Invalid or missing API key
+     */
+    401: unknown;
+    /**
+     * Contest not found
+     */
+    404: unknown;
+};
+
+export type HitchControllerDeleteParticipantResponses = {
+    /**
+     * Participant deleted successfully
+     */
+    200: unknown;
+};
+
 export type HitchControllerGetUserHistoryData = {
     body?: never;
     headers: {

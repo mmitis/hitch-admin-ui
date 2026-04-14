@@ -9,9 +9,11 @@ import {
   contestControllerPopulateUserNames,
   hitchControllerFinishContest,
   hitchControllerResetUser,
+  hitchControllerDeleteParticipant,
 } from '@/client/sdk.gen';
 import type { RankingDto } from '@/client/types.gen';
 import { UserQrModal } from '@/components/users/user-qr-modal';
+import { UserHistoryModal } from '@/components/users/user-history-modal';
 
 const ACTIVITY_COLORS: Record<string, string> = {
   FINISHED: 'bg-green-100 text-green-700',
@@ -40,6 +42,7 @@ export function ParticipantsTable() {
   const [editName, setEditName] = useState('');
   const [search, setSearch] = useState('');
   const [qrUser, setQrUser] = useState<{ id: string; name: string } | null>(null);
+  const [historyUser, setHistoryUser] = useState<{ id: string; name: string } | null>(null);
 
   const { data: rows, isLoading, refetch, isFetching } = useQuery<RankingDto[]>({
     queryKey: ['ranking', contestId],
@@ -102,6 +105,17 @@ export function ParticipantsTable() {
         headers: { Authorization: '' },
       });
       if (error) throw new Error('Failed to reset');
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ranking', contestId] }),
+  });
+
+  const deleteUser = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await hitchControllerDeleteParticipant({
+        path: { contestId: contestId!, userId },
+        headers: { Authorization: '' },
+      });
+      if (error) throw new Error('Failed to delete');
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['ranking', contestId] }),
   });
@@ -260,6 +274,19 @@ export function ParticipantsTable() {
                         >
                           Reset
                         </button>
+                        <button
+                          onClick={() => setHistoryUser({ id: row.user.id, name: row.user.name })}
+                          className="px-2 py-0.5 text-xs border border-zinc-200 rounded hover:bg-zinc-50"
+                        >
+                          History
+                        </button>
+                        <button
+                          onClick={() => { if (window.confirm(`Delete participant #${row.user.id} "${row.user.name}"? This permanently removes the user and all their data.`)) deleteUser.mutate(row.user.id); }}
+                          disabled={deleteUser.isPending}
+                          className="px-2 py-0.5 text-xs border border-red-300 text-red-700 rounded hover:bg-red-100 disabled:opacity-50 font-medium"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -284,6 +311,15 @@ export function ParticipantsTable() {
           userName={qrUser.name}
           isOpen={!!qrUser}
           onClose={() => setQrUser(null)}
+        />
+      )}
+      {contestId && historyUser && (
+        <UserHistoryModal
+          contestId={contestId}
+          userId={historyUser.id}
+          userName={historyUser.name}
+          isOpen={!!historyUser}
+          onClose={() => setHistoryUser(null)}
         />
       )}
     </div>
