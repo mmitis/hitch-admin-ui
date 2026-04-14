@@ -48,6 +48,8 @@ export function QrPdfButton() {
   const { apiKey } = useAuth();
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
+  const [zipProgress, setZipProgress] = useState('');
+  const [zipError, setZipError] = useState('');
 
   async function generate() {
     if (!contestId) { setError('Select a contest first'); return; }
@@ -158,6 +160,62 @@ export function QrPdfButton() {
     }
   }
 
+  async function generateZip() {
+    if (!contestId) { setZipError('Select a contest first'); return; }
+    if (!apiKey) { setZipError('Not authenticated'); return; }
+    setZipError(''); setZipProgress('Loading participants…');
+    const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+    const headers = { Authorization: `ApiKey ${apiKey}` };
+
+    try {
+      const rankRes = await fetch(`${BASE}/hitch/contest/${encodeURIComponent(contestId)}/ranking`, { headers });
+      if (!rankRes.ok) throw new Error(`Ranking fetch failed: ${rankRes.statusText}`);
+
+      const ranking: Array<{ user: { id: string; name: string } }> = await rankRes.json();
+      const nameMap: Record<string, string> = {};
+      ranking.forEach((r) => { nameMap[String(r.user.id)] = r.user.name; });
+
+      const participantIds = Object.keys(nameMap).map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b);
+      if (participantIds.length === 0) {
+        setZipError('No registered participants found');
+        setZipProgress('');
+        return;
+      }
+
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+
+      for (let i = 0; i < participantIds.length; i++) {
+        const n = participantIds[i];
+        setZipProgress(`Downloading QR… (${i + 1}/${participantIds.length})`);
+        try {
+          const qrRes = await fetch(
+            `${BASE}/contest/${encodeURIComponent(contestId)}/qr?userId=${encodeURIComponent(n)}`,
+            { headers },
+          );
+          if (qrRes.ok) {
+            const blob = await qrRes.blob();
+            const safeName = stripPolish(nameMap[String(n)] ?? 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
+            zip.file(`qr-${n}-${safeName}.png`, blob);
+          }
+        } catch { /* skip failed QR */ }
+      }
+
+      setZipProgress('Building ZIP…');
+      const content = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `qr-codes-${contestId}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setZipError(e instanceof Error ? e.message : 'Failed');
+    } finally {
+      setZipProgress('');
+    }
+  }
+
   return (
     <Card>
       <CardHeader><h2 className="text-sm font-bold">QR PDF Download</h2></CardHeader>
@@ -167,6 +225,10 @@ export function QrPdfButton() {
           {progress || 'Download QR PDF'}
         </Button>
         {error && <p className="text-xs text-red-600">{error}</p>}
+        <Button variant="bordered" isDisabled={!!zipProgress} onPress={generateZip} className="w-full">
+          {zipProgress || 'Download QR ZIP (one PNG per participant)'}
+        </Button>
+        {zipError && <p className="text-xs text-red-600">{zipError}</p>}
       </CardContent>
     </Card>
   );
