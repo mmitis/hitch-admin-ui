@@ -250,7 +250,7 @@ export function ParticipantsTable() {
                         : '—'}
                     </td>
                     <td className="px-4 py-2 text-zinc-400 text-xs">
-                      {row.lastPositionUpdate ? formatRelativeTime(row.lastPositionUpdate) : '—'}
+                      {row.lastPositionUpdate ? formatRelativeTime(String(row.lastPositionUpdate)) : '—'}
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex gap-1 flex-wrap">

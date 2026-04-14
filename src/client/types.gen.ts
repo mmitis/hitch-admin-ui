@@ -110,7 +110,7 @@ export type RankingDto = {
         [key: string]: unknown;
     } | null;
     /**
-     * Timestamp of last position update (null if never updated)
+     * Timestamp of last position update
      */
     lastPositionUpdate: string | null;
     /**
