@@ -9,7 +9,7 @@ import { contestControllerGetContestList } from '@/client/sdk.gen';
 
 const NAV_ITEMS = [
   { href: '/participants', label: 'Participants', icon: '👥' },
-  { href: '/qr',          label: 'QR',           icon: '📱' },
+  { href: '/qr',          label: 'QR Codes',     icon: '📱' },
   { href: '/news',        label: 'News',          icon: '📰' },
   { href: '/contests',    label: 'Contests',      icon: '🏆' },
   { href: '/schedule',    label: 'Schedule',      icon: '📅' },

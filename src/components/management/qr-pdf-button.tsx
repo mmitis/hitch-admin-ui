@@ -199,14 +199,6 @@ export function QrPdfButton() {
         loadSvgAsPng('/logo-bw.svg', 256),
       ]);
 
-      // Register fonts in the global jsPDF VFS once — subsequent instances read from it.
-      // Must happen before any `new jsPDF()` so addFont calls don't race the VFS.
-      {
-        const initDoc = new jsPDF();
-        initDoc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
-        initDoc.addFileToVFS('Roboto-Bold.ttf', fontBold);
-      }
-
       const zip = new JSZip();
 
       const MARGIN = 40;
@@ -222,7 +214,11 @@ export function QrPdfButton() {
         const n = participantIds[i];
         setZipProgress(`Generating PDF… (${i + 1}/${participantIds.length})`);
 
+        // jsPDF stores VFS per-instance (this.internal.vFS), so addFileToVFS
+        // must be called on the same doc instance that calls addFont.
         const doc = new jsPDF({ format: 'a4', orientation: 'portrait', unit: 'pt' });
+        doc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
+        doc.addFileToVFS('Roboto-Bold.ttf', fontBold);
         doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
         doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
 
