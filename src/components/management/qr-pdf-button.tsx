@@ -156,14 +156,16 @@ export function QrPdfButton() {
       const destination: string = contest.targetPosition?.name ?? '?';
       const contestName: string = contest.name;
 
-      const ranking: Array<{ user: { id: string; name: string } }> = await rankRes.json();
       const nameMap: Record<string, string> = {};
-      ranking.forEach((r) => { nameMap[String(r.user.id)] = r.user.name; });
+      if (rankRes.ok) {
+        const ranking: Array<{ user: { id: string; name: string } }> = await rankRes.json();
+        ranking.forEach((r) => { nameMap[String(r.user.id)] = r.user.name; });
+      }
 
       const participantIds = Object.keys(nameMap).map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b);
       if (participantIds.length === 0) {
-        setZipError('No registered participants found');
-        setZipProgress('');
+        setError('No registered participants found');
+        setProgress('');
         return;
       }
 
