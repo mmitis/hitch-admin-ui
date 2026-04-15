@@ -271,7 +271,7 @@ export function QrPdfButton() {
 
   return (
     <Card>
-      <CardHeader><h2 className="text-sm font-bold">QR PDF Download</h2></CardHeader>
+      <CardHeader><h2 className="text-sm font-bold">QR Code Downloads</h2></CardHeader>
       <CardContent className="flex flex-col gap-3 pb-4">
         <p className="text-xs text-zinc-400">A4 · 1 card/page · registered participants only</p>
         <Button variant="primary" isDisabled={!!progress} onPress={generate} className="w-full">
