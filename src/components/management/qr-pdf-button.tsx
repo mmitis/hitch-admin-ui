@@ -91,11 +91,7 @@ export function QrPdfButton() {
       ]);
 
       const doc = new jsPDF({ format: 'a4', orientation: 'portrait', unit: 'pt' });
-      doc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
-      doc.addFileToVFS('Roboto-Bold.ttf', fontBold);
-      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-      doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
-
+      
       const MARGIN = 40;
       const PAGE_W = 595;
       const PAGE_H = 842;
@@ -110,22 +106,38 @@ export function QrPdfButton() {
         const n = participantIds[i];
         if (i > 0) doc.addPage();
 
+        // Re-setup fonts for each page to ensure they persist
+        doc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
+        doc.addFileToVFS('Roboto-Bold.ttf', fontBold);
+        doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+        doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+
         // Large participant number
-        doc.setFont('Roboto', 'bold'); doc.setFontSize(72); doc.setTextColor(0);
+        doc.setFont('Roboto', 'bold');
+        doc.setFontSize(72);
+        doc.setTextColor(0);
         doc.text(`#${n}`, MARGIN, MARGIN + 68);
 
         // Participant name
-        doc.setFont('Roboto', 'bold'); doc.setFontSize(22); doc.setTextColor(40);
+        doc.setFont('Roboto', 'bold');
+        doc.setFontSize(22);
+        doc.setTextColor(40);
         doc.text(stripPolish(nameMap[String(n)] ?? '—'), MARGIN, MARGIN + 100);
 
         // Separator line
-        doc.setDrawColor(180); doc.setLineWidth(0.5);
+        doc.setDrawColor(180);
+        doc.setLineWidth(0.5);
         doc.line(MARGIN, MARGIN + 116, QR_X - 16, MARGIN + 116);
 
         // Contest info block
-        doc.setFont('Roboto', 'bold'); doc.setFontSize(13); doc.setTextColor(0);
+        doc.setFont('Roboto', 'bold');
+        doc.setFontSize(13);
+        doc.setTextColor(0);
         doc.text(stripPolish(contestName), MARGIN, MARGIN + 140);
-        doc.setFont('Roboto', 'normal'); doc.setFontSize(11); doc.setTextColor(60);
+        
+        doc.setFont('Roboto', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(60);
         doc.text(stripPolish(destination), MARGIN, MARGIN + 158);
 
         // Logo at bottom-left
