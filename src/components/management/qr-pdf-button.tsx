@@ -212,32 +212,39 @@ export function QrPdfButton() {
 
       for (let i = 0; i < participantIds.length; i++) {
         const n = participantIds[i];
+        const participantName = nameMap[String(n)] ?? '';
         setZipProgress(`Generating PDF… (${i + 1}/${participantIds.length})`);
 
-        // jsPDF stores VFS per-instance (this.internal.vFS), so addFileToVFS
-        // must be called on the same doc instance that calls addFont.
         const doc = new jsPDF({ format: 'a4', orientation: 'portrait', unit: 'pt' });
+        
+        // Use same font setup as single file generation
         doc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
         doc.addFileToVFS('Roboto-Bold.ttf', fontBold);
         doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
         doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
 
+        // Large participant number
         doc.setFont('Roboto', 'bold'); doc.setFontSize(72); doc.setTextColor(0);
         doc.text(`#${n}`, MARGIN, MARGIN + 68);
 
+        // Participant name  
         doc.setFont('Roboto', 'bold'); doc.setFontSize(22); doc.setTextColor(40);
-        doc.text(stripPolish(nameMap[String(n)] ?? '—'), MARGIN, MARGIN + 100);
+        doc.text(stripPolish(participantName || '—'), MARGIN, MARGIN + 100);
 
+        // Separator line
         doc.setDrawColor(180); doc.setLineWidth(0.5);
         doc.line(MARGIN, MARGIN + 116, QR_X - 16, MARGIN + 116);
 
+        // Contest info block
         doc.setFont('Roboto', 'bold'); doc.setFontSize(13); doc.setTextColor(0);
         doc.text(stripPolish(contestName), MARGIN, MARGIN + 140);
         doc.setFont('Roboto', 'normal'); doc.setFontSize(11); doc.setTextColor(60);
         doc.text(stripPolish(destination), MARGIN, MARGIN + 158);
 
+        // Logo at bottom-left
         doc.addImage(logoPng, 'PNG', MARGIN, PAGE_H - MARGIN - LOGO_SIZE, LOGO_SIZE, LOGO_SIZE);
 
+        // QR code
         try {
           const qrRes = await fetch(
             `${BASE}/contest/${encodeURIComponent(contestId)}/qr?userId=${encodeURIComponent(n)}`,
@@ -254,6 +261,7 @@ export function QrPdfButton() {
           }
         } catch { /* leave blank */ }
 
+        // Keep original filename format
         zip.file(`qr-${n}.pdf`, doc.output('arraybuffer'));
       }
 
