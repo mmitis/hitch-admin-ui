@@ -225,7 +225,7 @@ export function QrPdfButton() {
           {progress || 'Download QR PDF'}
         </Button>
         {error && <p className="text-xs text-red-600">{error}</p>}
-        <Button variant="bordered" isDisabled={!!zipProgress} onPress={generateZip} className="w-full">
+        <Button variant="secondary" isDisabled={!!zipProgress} onPress={generateZip} className="w-full">
           {zipProgress || 'Download QR ZIP (one PNG per participant)'}
         </Button>
         {zipError && <p className="text-xs text-red-600">{zipError}</p>}
