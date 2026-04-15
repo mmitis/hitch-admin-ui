@@ -236,7 +236,7 @@ export function ParticipantsTable() {
                     </td>
                     <td className="px-4 py-2">
                       {(() => {
-                        const displayStatus = row.lastPositionUpdate ? row.activityStatus : 'NOT_STARTED';
+                        const displayStatus = row.sent ? row.activityStatus : 'NOT_STARTED';
                         return (
                           <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${ACTIVITY_COLORS[displayStatus] ?? ACTIVITY_COLORS.WAITING}`}>
                             {displayStatus.replace('_', ' ')}

@@ -13,6 +13,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
   ON_ROAD: 'bg-blue-100 text-blue-700',
   INACTIVE: 'bg-yellow-100 text-yellow-700',
   WAITING: 'bg-zinc-100 text-zinc-600',
+  NOT_STARTED: 'bg-purple-100 text-purple-700',
 };
 
 export function UsersTable() {
@@ -29,6 +30,7 @@ export function UsersTable() {
     enabled: !!contestId,
   });
 
+  const displayStatus = (row: RankingDto) => row.sent ? row.activityStatus : 'NOT_STARTED';
   const activityClass = (s: string) => ACTIVITY_COLORS[s] ?? ACTIVITY_COLORS.WAITING;
 
   if (!contestId) return <p className="text-sm text-zinc-400">Select a contest first.</p>;
@@ -53,8 +55,8 @@ export function UsersTable() {
                 <td className="py-2 pr-4 text-zinc-500">{row.user.id}</td>
                 <td className="py-2 pr-4 font-medium">{row.user.name}</td>
                 <td className="py-2 pr-4">
-                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${activityClass(row.activityStatus)}`}>
-                    {row.activityStatus}
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${activityClass(displayStatus(row))}`}>
+                    {displayStatus(row).replace('_', ' ')}
                   </span>
                 </td>
                 <td className="py-2 pr-4 text-zinc-500">

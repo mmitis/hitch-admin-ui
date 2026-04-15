@@ -22,6 +22,7 @@ interface MapUser {
   id: string;
   name: string;
   activityStatus: string;
+  sent: boolean;
   lat: number;
   lng: number;
 }
@@ -37,10 +38,15 @@ function FlyToUser({ position, onDone }: { position: [number, number] | null; on
   return null;
 }
 
+function effectiveStatus(u: MapUser): string {
+  return u.sent ? u.activityStatus : 'NOT_STARTED';
+}
+
 function statusColor(status: string) {
   if (status === 'FINISHED') return '#38a169';
   if (status === 'ON_ROAD') return '#3182ce';
   if (status === 'INACTIVE') return '#d69e2e';
+  if (status === 'NOT_STARTED') return '#805ad5';
   return '#718096';
 }
 
@@ -71,13 +77,14 @@ export function MapView() {
       } | undefined;
       const ranking: RankingDto[] = rankResult.data ?? [];
 
-      const statusMap = Object.fromEntries(ranking.map((r) => [r.user.id, r.activityStatus]));
+      const rankingMap = Object.fromEntries(ranking.map((r) => [r.user.id, r]));
       const positions = mapResponse?.users ?? [];
 
       setUsers(positions.map((u) => ({
         id: u.user.id,
         name: u.user.name,
-        activityStatus: statusMap[u.user.id] ?? 'WAITING',
+        activityStatus: rankingMap[u.user.id]?.activityStatus ?? 'WAITING',
+        sent: rankingMap[u.user.id]?.sent ?? false,
         lat: u.position.lat,
         lng: u.position.lng,
       })));
@@ -128,7 +135,7 @@ export function MapView() {
                   <span className="font-medium">#{u.id}</span>
                   <span className="text-zinc-500 ml-1">{u.name}</span>
                 </span>
-                <span className="text-[10px]" style={{ color: statusColor(u.activityStatus) }}>{u.activityStatus}</span>
+                <span className="text-[10px]" style={{ color: statusColor(effectiveStatus(u)) }}>{effectiveStatus(u)}</span>
               </li>
             ))}
           </ul>
@@ -178,14 +185,14 @@ export function MapView() {
               position={[u.lat, u.lng]}
               icon={L.divIcon({
                 className: '',
-                html: `<div style="background:${statusColor(u.activityStatus)};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>`,
+                html: `<div style="background:${statusColor(effectiveStatus(u))};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>`,
                 iconSize: [12, 12],
                 iconAnchor: [6, 6],
               })}
             >
               <Popup>
                 <strong>#{u.id}</strong> {u.name}<br />
-                <span style={{ color: statusColor(u.activityStatus) }}>{u.activityStatus}</span>
+                <span style={{ color: statusColor(effectiveStatus(u)) }}>{effectiveStatus(u)}</span>
               </Popup>
             </Marker>
           ))}

@@ -114,6 +114,10 @@ export type RankingDto = {
      */
     lastPositionUpdate: string | null;
     /**
+     * Whether the participant has sent at least one position update
+     */
+    sent: boolean;
+    /**
      * Distance in kilometers from the contest target
      */
     distance: number;
