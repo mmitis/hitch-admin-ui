@@ -279,7 +279,7 @@ export function QrPdfButton() {
         </Button>
         {error && <p className="text-xs text-red-600">{error}</p>}
         <Button variant="secondary" isDisabled={!!zipProgress} onPress={generateZip} className="w-full">
-          {zipProgress || 'Download QR ZIP (one PDF per participant)'}
+          {zipProgress || 'Download PDF zip'}
         </Button>
         {zipError && <p className="text-xs text-red-600">{zipError}</p>}
       </CardContent>
