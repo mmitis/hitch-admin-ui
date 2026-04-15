@@ -169,18 +169,20 @@ export function QrPdfButton() {
 
       setZipProgress('Loading fonts…');
       const { jsPDF } = await import('jspdf');
-      const [JSZip, fontRegular, fontBold, logoPng] = await Promise.all([
+      const [JSZip, { PDFDocument }, fontRegular, fontBold, logoPng] = await Promise.all([
         import('jszip').then((m) => m.default),
+        import('pdf-lib'),
         loadFontAsBase64('/fonts/Roboto-Regular.ttf'),
         loadFontAsBase64('/fonts/Roboto-Bold.ttf'),
         loadSvgAsPng('/logo-bw.svg', 256),
       ]);
 
-      const zip = new JSZip();
+      const doc = new jsPDF({ format: 'a4', orientation: 'portrait', unit: 'pt' });
 
       for (let i = 0; i < participantIds.length; i++) {
         const n = participantIds[i];
-        setZipProgress(`Generating PDF… (${i + 1}/${participantIds.length})`);
+        if (i > 0) doc.addPage();
+        setZipProgress(`Generating… (${i + 1}/${participantIds.length})`);
 
         let qrBase64: string | undefined;
         try {
@@ -198,7 +200,6 @@ export function QrPdfButton() {
           }
         } catch { /* leave blank */ }
 
-        const doc = new jsPDF({ format: 'a4', orientation: 'portrait', unit: 'pt' });
         renderParticipantCard(doc, {
           participantNumber: n,
           participantName: stripPolish(nameMap[String(n)] ?? '—'),
@@ -209,8 +210,19 @@ export function QrPdfButton() {
           logoPng,
           qrBase64,
         });
+      }
 
-        zip.file(`qr-${n}.pdf`, doc.output('arraybuffer'));
+      setZipProgress('Splitting pages…');
+      const fullPdf = await PDFDocument.load(doc.output('arraybuffer'));
+      const zip = new JSZip();
+
+      for (let i = 0; i < participantIds.length; i++) {
+        const n = participantIds[i];
+        const singleDoc = await PDFDocument.create();
+        const [page] = await singleDoc.copyPages(fullPdf, [i]);
+        singleDoc.addPage(page);
+        const bytes = await singleDoc.save();
+        zip.file(`qr-${n}.pdf`, bytes);
       }
 
       setZipProgress('Building ZIP…');
