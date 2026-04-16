@@ -13,6 +13,7 @@ export function ParticipantActions() {
   const { contestId } = useContest();
   const [addId, setAddId] = useState('');
   const [addName, setAddName] = useState('');
+  const [addNonTrackable, setAddNonTrackable] = useState(false);
   const [finishId, setFinishId] = useState('');
   const [resetId, setResetId] = useState('');
   const [msg, setMsg] = useState('');
@@ -27,11 +28,11 @@ export function ParticipantActions() {
     try {
       const { error: err } = await contestControllerAddParticipant({
         path: { contestId },
-        body: { userId: addId, name: addName },
+        body: { userId: addId, name: addName, nonTrackable: addNonTrackable },
       });
       if (err) throw new Error('Failed to add participant');
-      setMsg(`#${addId} added`);
-      setAddId(''); setAddName('');
+      setMsg(`#${addId} added${addNonTrackable ? ' (non-trackable)' : ''}`);
+      setAddId(''); setAddName(''); setAddNonTrackable(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed');
     }
@@ -81,6 +82,15 @@ export function ParticipantActions() {
           <div className="flex-1 flex flex-col gap-1">
             <label className="text-xs text-zinc-500">Name</label>
             <input type="text" value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="User name" className={inputClass} />
+          </div>
+          <div className="flex flex-col gap-1 items-center">
+            <label className="text-xs text-zinc-500">Non-trackable</label>
+            <input 
+              type="checkbox" 
+              checked={addNonTrackable} 
+              onChange={(e) => setAddNonTrackable(e.target.checked)} 
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            />
           </div>
           <Button variant="ghost" onPress={addParticipant} className="shrink-0 border border-green-200 text-green-700 hover:bg-green-50">Add</Button>
         </div>

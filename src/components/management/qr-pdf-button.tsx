@@ -60,23 +60,31 @@ export function QrPdfButton() {
     const headers = { Authorization: `ApiKey ${apiKey}` };
 
     try {
-      const [contestRes, rankRes] = await Promise.all([
+      const [contestRes, participantsRes] = await Promise.all([
         fetch(`${BASE}/contest/${encodeURIComponent(contestId)}`, { headers }),
-        fetch(`${BASE}/hitch/contest/${encodeURIComponent(contestId)}/ranking`, { headers }),
+        fetch(`${BASE}/contest/${encodeURIComponent(contestId)}/participants`, { headers }),
       ]);
       if (!contestRes.ok) throw new Error(`Contest fetch failed: ${contestRes.statusText}`);
+      if (!participantsRes.ok) throw new Error(`Participants fetch failed: ${participantsRes.statusText}`);
 
       const contest = await contestRes.json();
+      const allParticipants: Array<{ externalUserId: string; name: string; nonTrackable: boolean }> = await participantsRes.json();
+      
       const destination: string = contest.targetPosition?.name ?? '?';
       const contestName: string = contest.name;
 
+      // Filter out non-trackable participants
+      const trackableParticipants = allParticipants.filter(p => !p.nonTrackable);
+      const participantIds = trackableParticipants
+        .map(p => Number(p.externalUserId))
+        .filter((n) => !isNaN(n))
+        .sort((a, b) => a - b);
+      
       const nameMap: Record<string, string> = {};
-      if (rankRes.ok) {
-        const ranking: Array<{ user: { id: string; name: string } }> = await rankRes.json();
-        ranking.forEach((r) => { nameMap[String(r.user.id)] = r.user.name; });
-      }
+      trackableParticipants.forEach(p => {
+        nameMap[p.externalUserId] = p.name;
+      });
 
-      const participantIds = Object.keys(nameMap).map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b);
       if (participantIds.length === 0) {
         setError('No registered participants found');
         setProgress('');
@@ -145,24 +153,31 @@ export function QrPdfButton() {
     const headers = { Authorization: `ApiKey ${apiKey}` };
 
     try {
-      const [contestRes, rankRes] = await Promise.all([
+      const [contestRes, participantsRes] = await Promise.all([
         fetch(`${BASE}/contest/${encodeURIComponent(contestId)}`, { headers }),
-        fetch(`${BASE}/hitch/contest/${encodeURIComponent(contestId)}/ranking`, { headers }),
+        fetch(`${BASE}/contest/${encodeURIComponent(contestId)}/participants`, { headers }),
       ]);
       if (!contestRes.ok) throw new Error(`Contest fetch failed: ${contestRes.statusText}`);
-      if (!rankRes.ok) throw new Error(`Ranking fetch failed: ${rankRes.statusText}`);
+      if (!participantsRes.ok) throw new Error(`Participants fetch failed: ${participantsRes.statusText}`);
 
       const contest = await contestRes.json();
+      const allParticipants: Array<{ externalUserId: string; name: string; nonTrackable: boolean }> = await participantsRes.json();
+      
       const destination: string = contest.targetPosition?.name ?? '?';
       const contestName: string = contest.name;
 
+      // Filter out non-trackable participants
+      const trackableParticipants = allParticipants.filter(p => !p.nonTrackable);
+      const participantIds = trackableParticipants
+        .map(p => Number(p.externalUserId))
+        .filter((n) => !isNaN(n))
+        .sort((a, b) => a - b);
+      
       const nameMap: Record<string, string> = {};
-      if (rankRes.ok) {
-        const ranking: Array<{ user: { id: string; name: string } }> = await rankRes.json();
-        ranking.forEach((r) => { nameMap[String(r.user.id)] = r.user.name; });
-      }
+      trackableParticipants.forEach(p => {
+        nameMap[p.externalUserId] = p.name;
+      });
 
-      const participantIds = Object.keys(nameMap).map(Number).filter((n) => !isNaN(n)).sort((a, b) => a - b);
       if (participantIds.length === 0) {
         setError('No registered participants found');
         setProgress('');
@@ -171,20 +186,22 @@ export function QrPdfButton() {
 
       setZipProgress('Loading fonts…');
       const { jsPDF } = await import('jspdf');
-      const [JSZip, { PDFDocument }, fontRegular, fontBold, logoPng] = await Promise.all([
+      const [JSZip, fontRegular, fontBold, logoPng] = await Promise.all([
         import('jszip').then((m) => m.default),
-        import('pdf-lib'),
         loadFontAsBase64('/fonts/Roboto-Regular.ttf'),
         loadFontAsBase64('/fonts/Roboto-Bold.ttf'),
         loadSvgAsPng('/logo-bw.svg', 256),
       ]);
 
-      const doc = new jsPDF({ format: 'a4', orientation: 'portrait', unit: 'pt' });
+      const zip = new JSZip();
 
+      // Generate individual PDFs for each participant
       for (let i = 0; i < participantIds.length; i++) {
         const n = participantIds[i];
-        if (i > 0) doc.addPage();
         setZipProgress(`Generating… (${i + 1}/${participantIds.length})`);
+
+        // Create a new PDF document for each participant
+        const doc = new jsPDF({ format: 'a4', orientation: 'portrait', unit: 'pt' });
 
         let qrBase64: string | undefined;
         try {
@@ -212,18 +229,9 @@ export function QrPdfButton() {
           logoPng,
           qrBase64,
         });
-      }
 
-      setZipProgress('Splitting pages…');
-      const fullPdf = await PDFDocument.load(doc.output('arraybuffer'));
-      const zip = new JSZip();
-
-      for (let i = 0; i < participantIds.length; i++) {
-        const n = participantIds[i];
-        const singleDoc = await PDFDocument.create();
-        const [page] = await singleDoc.copyPages(fullPdf, [i]);
-        singleDoc.addPage(page);
-        const bytes = await singleDoc.save();
+        // Convert individual PDF to bytes and add to zip
+        const bytes = doc.output('arraybuffer');
         zip.file(`qr-${n}.pdf`, bytes);
       }
 
