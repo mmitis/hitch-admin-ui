@@ -99,6 +99,11 @@ export function QrPdfButton() {
         loadSvgAsPng('/logo-bw.svg', 256),
       ]);
 
+      // Validate fonts and logo loaded successfully  
+      if (!fontRegular || !fontBold || !logoPng) {
+        throw new Error('Failed to load fonts or logo');
+      }
+
       const doc = new jsPDF({ format: 'a4', orientation: 'portrait', unit: 'pt' });
       
       setProgress(`Generating… (0/${participantIds.length})`);
@@ -123,16 +128,21 @@ export function QrPdfButton() {
           }
         } catch { /* leave blank */ }
 
-        renderParticipantCard(doc, {
-          participantNumber: n,
-          participantName: stripPolish(nameMap[String(n)] ?? '—'),
-          contestName: stripPolish(contestName),
-          destination: stripPolish(destination),
-          fontRegular,
-          fontBold,
-          logoPng,
-          qrBase64,
-        });
+        try {
+          renderParticipantCard(doc, {
+            participantNumber: n,
+            participantName: stripPolish(nameMap[String(n)] ?? '—'),
+            contestName: stripPolish(contestName),
+            destination: stripPolish(destination),
+            fontRegular,
+            fontBold,
+            logoPng,
+            qrBase64,
+          });
+        } catch (renderError) {
+          console.error(`Failed to render participant ${n}:`, renderError);
+          throw new Error(`Failed to render participant ${n}: ${renderError instanceof Error ? renderError.message : 'Unknown error'}`);
+        }
 
         setProgress(`Generating… (${i + 1}/${participantIds.length})`);
       }
@@ -179,8 +189,8 @@ export function QrPdfButton() {
       });
 
       if (participantIds.length === 0) {
-        setError('No registered participants found');
-        setProgress('');
+        setZipError('No registered participants found');
+        setZipProgress('');
         return;
       }
 
@@ -192,6 +202,11 @@ export function QrPdfButton() {
         loadFontAsBase64('/fonts/Roboto-Bold.ttf'),
         loadSvgAsPng('/logo-bw.svg', 256),
       ]);
+
+      // Validate fonts and logo loaded successfully
+      if (!fontRegular || !fontBold || !logoPng) {
+        throw new Error('Failed to load fonts or logo');
+      }
 
       const zip = new JSZip();
 
@@ -218,9 +233,17 @@ export function QrPdfButton() {
             });
           }
         } catch { /* leave blank */ }
+        
+        // Validate participant data
+        const participantName = nameMap[String(n)];
+        if (!participantName) {
+          console.warn(`No name found for participant ${n}, skipping`);
+          continue;
+        }
+
         const params = {
           participantNumber: n,
-          participantName: stripPolish(nameMap[String(n)] ?? '—'),
+          participantName: stripPolish(participantName),
           contestName: stripPolish(contestName),
           destination: stripPolish(destination),
           fontRegular,
@@ -228,8 +251,13 @@ export function QrPdfButton() {
           logoPng,
           qrBase64,
         };
-        console.log(params)
-        renderParticipantCard(doc, params);
+        console.log('Rendering participant card with params:', params);
+        try {
+          renderParticipantCard(doc, params);
+        } catch (renderError) {
+          console.error(`Failed to render participant ${n}:`, renderError);
+          throw new Error(`Failed to render participant ${n}: ${renderError instanceof Error ? renderError.message : 'Unknown error'}`);
+        }
 
         // Convert individual PDF to bytes and add to zip
         const bytes = doc.output('arraybuffer');

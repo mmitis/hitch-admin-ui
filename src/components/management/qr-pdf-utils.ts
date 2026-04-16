@@ -23,10 +23,19 @@ export interface ParticipantCardParams {
 export function renderParticipantCard(doc: JsPDFType, params: ParticipantCardParams): void {
   const { participantNumber, participantName, contestName, destination, fontRegular, fontBold, logoPng, qrBase64 } = params;
 
-  doc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
-  doc.addFileToVFS('Roboto-Bold.ttf', fontBold);
-  doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-  doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+  // Validate required parameters
+  if (!fontRegular || !fontBold || !logoPng) {
+    throw new Error('Missing required fonts or logo');
+  }
+
+  try {
+    doc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
+    doc.addFileToVFS('Roboto-Bold.ttf', fontBold);
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.addFont('Roboto-Bold.ttf', 'Roboto', 'bold');
+  } catch (error) {
+    throw new Error(`Failed to add fonts: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 
   doc.setFont('Roboto', 'bold');
   doc.setFontSize(72);
@@ -45,16 +54,24 @@ export function renderParticipantCard(doc: JsPDFType, params: ParticipantCardPar
   doc.setFont('Roboto', 'bold');
   doc.setFontSize(13);
   doc.setTextColor(0);
-  doc.text(contestName, MARGIN, MARGIN + 140);
+  doc.text(contestName || 'Contest', MARGIN, MARGIN + 140);
 
   doc.setFont('Roboto', 'normal');
   doc.setFontSize(11);
   doc.setTextColor(60);
-  doc.text(destination, MARGIN, MARGIN + 158);
+  doc.text(destination || 'Destination', MARGIN, MARGIN + 158);
 
-  doc.addImage(logoPng, 'PNG', MARGIN, PAGE_H - MARGIN - LOGO_SIZE, LOGO_SIZE, LOGO_SIZE);
+  try {
+    doc.addImage(logoPng, 'PNG', MARGIN, PAGE_H - MARGIN - LOGO_SIZE, LOGO_SIZE, LOGO_SIZE);
+  } catch (error) {
+    console.warn('Failed to add logo image:', error);
+  }
 
   if (qrBase64) {
-    doc.addImage(qrBase64, 'PNG', QR_X, QR_Y, QR_SIZE, QR_SIZE);
+    try {
+      doc.addImage(qrBase64, 'PNG', QR_X, QR_Y, QR_SIZE, QR_SIZE);
+    } catch (error) {
+      console.warn('Failed to add QR code image:', error);
+    }
   }
 }
