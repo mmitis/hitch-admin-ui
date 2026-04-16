@@ -39,6 +39,7 @@ export function ParticipantsTable() {
 
   const [addId, setAddId] = useState('');
   const [addName, setAddName] = useState('');
+  const [addNonTrackable, setAddNonTrackable] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [search, setSearch] = useState('');
@@ -63,7 +64,7 @@ export function ParticipantsTable() {
     mutationFn: async () => {
       const { error } = await contestControllerAddParticipant({
         path: { contestId: contestId! },
-        body: { userId: addId, name: addName },
+        body: { userId: addId, name: addName, nonTrackable: addNonTrackable },
       });
       if (error) throw new Error('Failed to add participant');
     },
@@ -71,6 +72,7 @@ export function ParticipantsTable() {
       qc.invalidateQueries({ queryKey: ['ranking', contestId] });
       setAddId('');
       setAddName('');
+      setAddNonTrackable(false);
     },
   });
 
@@ -149,6 +151,15 @@ export function ParticipantsTable() {
             }}
             className={`flex-1 min-w-[140px] ${inputClass}`}
           />
+          <label className="flex items-center gap-1.5 text-xs text-zinc-500 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={addNonTrackable}
+              onChange={(e) => setAddNonTrackable(e.target.checked)}
+              className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
+            />
+            Non-trackable
+          </label>
           <button
             onClick={() => addParticipant.mutate()}
             disabled={addParticipant.isPending || !addId.trim() || !addName.trim()}
