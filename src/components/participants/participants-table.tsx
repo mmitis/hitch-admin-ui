@@ -22,6 +22,27 @@ function formatDate(iso?: string | null): string {
   return new Date(iso).toLocaleString();
 }
 
+function formatRelativeTime(iso?: string | null): string {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
+
+const ACTIVITY_COLORS: Record<string, { bg: string; text: string }> = {
+  FINISHED: { bg: 'bg-green-100', text: 'text-green-700' },
+  ON_ROAD: { bg: 'bg-blue-100', text: 'text-blue-700' },
+  WAITING: { bg: 'bg-zinc-100', text: 'text-zinc-600' },
+  INACTIVE: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
+};
+
 export function ParticipantsTable() {
   const { contestId } = useContest();
   const qc = useQueryClient();
@@ -196,8 +217,9 @@ export function ParticipantsTable() {
                   <th className="px-4 py-2.5">#</th>
                   <th className="px-4 py-2.5">Name</th>
                   <th className="px-4 py-2.5">Type</th>
+                  <th className="px-4 py-2.5">Status</th>
+                  <th className="px-4 py-2.5">Last Update</th>
                   <th className="px-4 py-2.5">Finished</th>
-                  <th className="px-4 py-2.5">Created</th>
                   <th className="px-4 py-2.5">Actions</th>
                 </tr>
               </thead>
@@ -250,13 +272,24 @@ export function ParticipantsTable() {
                         </span>
                       )}
                     </td>
+                    <td className="px-4 py-2">
+                      {(() => {
+                        const status = (row as any).activityStatus ?? 'INACTIVE';
+                        const colors = ACTIVITY_COLORS[status] ?? ACTIVITY_COLORS.INACTIVE;
+                        return (
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
+                            {status.replace('_', ' ')}
+                          </span>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-4 py-2 text-zinc-400 text-xs" title={formatDate((row as any).lastPositionUpdate)}>
+                      {formatRelativeTime((row as any).lastPositionUpdate)}
+                    </td>
                     <td className="px-4 py-2 text-zinc-400 text-xs">
                       {row.finishedAt ? (
                         <span className="text-green-600 font-medium">{formatDate(row.finishedAt)}</span>
                       ) : '—'}
-                    </td>
-                    <td className="px-4 py-2 text-zinc-400 text-xs">
-                      {formatDate(row.createdAt)}
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex gap-1 flex-wrap">
@@ -306,7 +339,7 @@ export function ParticipantsTable() {
                 })}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-zinc-400">
+                    <td colSpan={7} className="px-4 py-6 text-center text-sm text-zinc-400">
                       {search ? 'No participants match your search.' : 'No participants yet.'}
                     </td>
                   </tr>
