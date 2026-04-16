@@ -410,7 +410,7 @@ export type AppControllerGetAuthQrCodeData = {
          */
         name: string;
     };
-    url: '/api/auth/qr';
+    url: '/auth/qr';
 };
 
 export type AppControllerGetAuthQrCodeErrors = {
@@ -444,7 +444,7 @@ export type HitchControllerAddPositionData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/map/position';
+    url: '/hitch/contest/{contestId}/map/position';
 };
 
 export type HitchControllerAddPositionErrors = {
@@ -484,7 +484,7 @@ export type HitchControllerGetMapPositionsAdminData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/map/admin';
+    url: '/hitch/contest/{contestId}/map/admin';
 };
 
 export type HitchControllerGetMapPositionsAdminErrors = {
@@ -520,7 +520,7 @@ export type HitchControllerGetMapPositionsData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/map';
+    url: '/hitch/contest/{contestId}/map';
 };
 
 export type HitchControllerGetMapPositionsErrors = {
@@ -562,7 +562,7 @@ export type HitchControllerGetMeData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/me';
+    url: '/hitch/contest/{contestId}/me';
 };
 
 export type HitchControllerGetMeErrors = {
@@ -604,7 +604,7 @@ export type HitchControllerFinishContestData = {
         userId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/finish/{userId}';
+    url: '/hitch/contest/{contestId}/finish/{userId}';
 };
 
 export type HitchControllerFinishContestErrors = {
@@ -640,7 +640,7 @@ export type HitchControllerHandleFlyoverCallbackData = {
         contestId: unknown;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/flyover/callback';
+    url: '/hitch/contest/{contestId}/flyover/callback';
 };
 
 export type HitchControllerHandleFlyoverCallbackResponses = {
@@ -663,7 +663,7 @@ export type HitchControllerGetFlyoverStatusData = {
         userId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/flyover/{userId}';
+    url: '/hitch/contest/{contestId}/flyover/{userId}';
 };
 
 export type HitchControllerGetFlyoverStatusResponses = {
@@ -684,7 +684,7 @@ export type HitchControllerGetRankingData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/ranking';
+    url: '/hitch/contest/{contestId}/ranking';
 };
 
 export type HitchControllerGetRankingErrors = {
@@ -718,7 +718,7 @@ export type HitchControllerClearContestData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/clear';
+    url: '/hitch/contest/{contestId}/clear';
 };
 
 export type HitchControllerClearContestErrors = {
@@ -758,7 +758,7 @@ export type HitchControllerResetUserData = {
         userId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/reset/{userId}';
+    url: '/hitch/contest/{contestId}/reset/{userId}';
 };
 
 export type HitchControllerResetUserErrors = {
@@ -798,7 +798,7 @@ export type HitchControllerDeleteParticipantData = {
         userId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/participant/{userId}';
+    url: '/hitch/contest/{contestId}/participant/{userId}';
 };
 
 export type HitchControllerDeleteParticipantErrors = {
@@ -834,7 +834,7 @@ export type HitchControllerGetUserHistoryData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/history';
+    url: '/hitch/contest/{contestId}/history';
 };
 
 export type HitchControllerGetUserHistoryErrors = {
@@ -872,7 +872,7 @@ export type HitchControllerGetUserHistoryAdminData = {
         userId: string;
     };
     query?: never;
-    url: '/api/hitch/contest/{contestId}/history/{userId}';
+    url: '/hitch/contest/{contestId}/history/{userId}';
 };
 
 export type HitchControllerGetUserHistoryAdminErrors = {
@@ -905,7 +905,7 @@ export type ContestControllerGetCurrentContestData = {
     };
     path?: never;
     query?: never;
-    url: '/api/contest';
+    url: '/contest';
 };
 
 export type ContestControllerGetCurrentContestErrors = {
@@ -932,7 +932,7 @@ export type ContestControllerCreateContestData = {
     body: CreateContestDto;
     path?: never;
     query?: never;
-    url: '/api/contest';
+    url: '/contest';
 };
 
 export type ContestControllerCreateContestErrors = {
@@ -959,7 +959,7 @@ export type ContestControllerGetContestListData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/api/contest/list';
+    url: '/contest/list';
 };
 
 export type ContestControllerGetContestListResponses = {
@@ -975,7 +975,7 @@ export type ContestControllerGetLogosData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/api/contest/logos';
+    url: '/contest/logos';
 };
 
 export type ContestControllerGetLogosResponses = {
@@ -993,7 +993,7 @@ export type ContestControllerDeleteContestData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}';
+    url: '/contest/{contestId}';
 };
 
 export type ContestControllerDeleteContestErrors = {
@@ -1020,7 +1020,7 @@ export type ContestControllerGetContestByIdData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}';
+    url: '/contest/{contestId}';
 };
 
 export type ContestControllerGetContestByIdErrors = {
@@ -1045,7 +1045,7 @@ export type ContestControllerUpdateContestData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}';
+    url: '/contest/{contestId}';
 };
 
 export type ContestControllerUpdateContestErrors = {
@@ -1074,7 +1074,7 @@ export type ContestControllerSetContestLogoData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/logo';
+    url: '/contest/{contestId}/logo';
 };
 
 export type ContestControllerSetContestLogoErrors = {
@@ -1103,7 +1103,7 @@ export type ContestControllerGetScheduleData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/schedule';
+    url: '/contest/{contestId}/schedule';
 };
 
 export type ContestControllerGetScheduleErrors = {
@@ -1126,7 +1126,7 @@ export type ContestControllerAddScheduleEventData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/schedule';
+    url: '/contest/{contestId}/schedule';
 };
 
 export type ContestControllerAddScheduleEventErrors = {
@@ -1155,7 +1155,7 @@ export type ContestControllerGetScheduleEventsData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/schedule/list';
+    url: '/contest/{contestId}/schedule/list';
 };
 
 export type ContestControllerGetScheduleEventsErrors = {
@@ -1181,7 +1181,7 @@ export type ContestControllerDeleteScheduleEventData = {
         eventId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/schedule/{eventId}';
+    url: '/contest/{contestId}/schedule/{eventId}';
 };
 
 export type ContestControllerDeleteScheduleEventErrors = {
@@ -1209,7 +1209,7 @@ export type ContestControllerUpdateScheduleEventData = {
         eventId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/schedule/{eventId}';
+    url: '/contest/{contestId}/schedule/{eventId}';
 };
 
 export type ContestControllerUpdateScheduleEventErrors = {
@@ -1238,7 +1238,7 @@ export type ContestControllerGetRankingData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/ranking';
+    url: '/contest/{contestId}/ranking';
 };
 
 export type ContestControllerGetRankingErrors = {
@@ -1263,7 +1263,7 @@ export type ContestControllerGetParticipantsData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/participants';
+    url: '/contest/{contestId}/participants';
 };
 
 export type ContestControllerGetParticipantsErrors = {
@@ -1302,7 +1302,7 @@ export type ContestControllerAddParticipantData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/participants';
+    url: '/contest/{contestId}/participants';
 };
 
 export type ContestControllerAddParticipantErrors = {
@@ -1334,7 +1334,7 @@ export type ContestControllerPopulateUserNamesData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/populate';
+    url: '/contest/{contestId}/populate';
 };
 
 export type ContestControllerPopulateUserNamesErrors = {
@@ -1357,7 +1357,7 @@ export type ContestControllerPrepopulateRandomlyData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/prepopulate-randomly';
+    url: '/contest/{contestId}/prepopulate-randomly';
 };
 
 export type ContestControllerPrepopulateRandomlyErrors = {
@@ -1380,7 +1380,7 @@ export type ContestControllerGetNewsData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/news';
+    url: '/contest/{contestId}/news';
 };
 
 export type ContestControllerGetNewsErrors = {
@@ -1405,7 +1405,7 @@ export type ContestControllerAddNewsData = {
         contestId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/news';
+    url: '/contest/{contestId}/news';
 };
 
 export type ContestControllerAddNewsErrors = {
@@ -1435,7 +1435,7 @@ export type ContestControllerDeleteNewsData = {
         newsId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/news/{newsId}';
+    url: '/contest/{contestId}/news/{newsId}';
 };
 
 export type ContestControllerDeleteNewsErrors = {
@@ -1463,7 +1463,7 @@ export type ContestControllerUpdateNewsData = {
         newsId: string;
     };
     query?: never;
-    url: '/api/contest/{contestId}/news/{newsId}';
+    url: '/contest/{contestId}/news/{newsId}';
 };
 
 export type ContestControllerUpdateNewsErrors = {
@@ -1494,7 +1494,7 @@ export type ContestControllerGetContestQrData = {
     query: {
         userId: string;
     };
-    url: '/api/contest/{contestId}/qr';
+    url: '/contest/{contestId}/qr';
 };
 
 export type ContestControllerGetContestQrResponses = {

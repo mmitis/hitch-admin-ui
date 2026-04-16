@@ -1,6 +1,6 @@
 openapi: 3.0.0
 paths:
-  /api/auth/qr:
+  /auth/qr:
     get:
       operationId: AppController_getAuthQRCode
       parameters:
@@ -31,7 +31,7 @@ paths:
       summary: Generate QR code for authentication (contains Bearer token with base64-encoded userId:name)
       tags:
         - app
-  /api/hitch/contest/{contestId}/map/position:
+  /hitch/contest/{contestId}/map/position:
     post:
       operationId: HitchController_addPosition
       parameters:
@@ -66,7 +66,7 @@ paths:
       summary: Add user position to the map
       tags: &ref_0
         - hitch
-  /api/hitch/contest/{contestId}/map/admin:
+  /hitch/contest/{contestId}/map/admin:
     get:
       operationId: HitchController_getMapPositionsAdmin
       parameters:
@@ -94,7 +94,7 @@ paths:
         - apiKey: []
       summary: Get all map positions with contest info (admin, API key required)
       tags: *ref_0
-  /api/hitch/contest/{contestId}/map:
+  /hitch/contest/{contestId}/map:
     get:
       operationId: HitchController_getMapPositions
       parameters:
@@ -128,7 +128,7 @@ paths:
           description: Contest not found
       summary: Get all positions on the map
       tags: *ref_0
-  /api/hitch/contest/{contestId}/me:
+  /hitch/contest/{contestId}/me:
     get:
       operationId: HitchController_getMe
       parameters:
@@ -158,7 +158,7 @@ paths:
           description: Participant not found in contest
       summary: Get current user info including nonTrackable flag
       tags: *ref_0
-  /api/hitch/contest/{contestId}/finish/{userId}:
+  /hitch/contest/{contestId}/finish/{userId}:
     post:
       operationId: HitchController_finishContest
       parameters:
@@ -199,7 +199,7 @@ paths:
         - apiKey: []
       summary: Finish the contest for a specific user
       tags: *ref_0
-  /api/hitch/contest/{contestId}/flyover/callback:
+  /hitch/contest/{contestId}/flyover/callback:
     post:
       operationId: HitchController_handleFlyoverCallback
       parameters:
@@ -222,7 +222,7 @@ paths:
         - apiKey: []
       summary: Callback endpoint for flyover video generation
       tags: *ref_0
-  /api/hitch/contest/{contestId}/flyover/{userId}:
+  /hitch/contest/{contestId}/flyover/{userId}:
     get:
       operationId: HitchController_getFlyoverStatus
       parameters:
@@ -249,7 +249,7 @@ paths:
                 $ref: '#/components/schemas/FlyoverStatusDto'
       summary: Get flyover video status for a user
       tags: *ref_0
-  /api/hitch/contest/{contestId}/ranking:
+  /hitch/contest/{contestId}/ranking:
     get:
       operationId: HitchController_getRanking
       parameters:
@@ -273,7 +273,7 @@ paths:
           description: Contest not found
       summary: Get user rankings sorted by finish time, then by distance to target
       tags: *ref_0
-  /api/hitch/contest/{contestId}/clear:
+  /hitch/contest/{contestId}/clear:
     delete:
       operationId: HitchController_clearContest
       parameters:
@@ -301,7 +301,7 @@ paths:
         - apiKey: []
       summary: Clear all contest data (positions, history, finished status, news)
       tags: *ref_0
-  /api/hitch/contest/{contestId}/reset/{userId}:
+  /hitch/contest/{contestId}/reset/{userId}:
     delete:
       operationId: HitchController_resetUser
       parameters:
@@ -336,7 +336,7 @@ paths:
         - apiKey: []
       summary: Reset position and history for a specific user
       tags: *ref_0
-  /api/hitch/contest/{contestId}/participant/{userId}:
+  /hitch/contest/{contestId}/participant/{userId}:
     delete:
       operationId: HitchController_deleteParticipant
       parameters:
@@ -371,7 +371,7 @@ paths:
         - apiKey: []
       summary: Delete a participant and all their data (admin, API key required)
       tags: *ref_0
-  /api/hitch/contest/{contestId}/history:
+  /hitch/contest/{contestId}/history:
     get:
       operationId: HitchController_getUserHistory
       parameters:
@@ -401,7 +401,7 @@ paths:
           description: User not authenticated
       summary: Get all position history for the current user
       tags: *ref_0
-  /api/hitch/contest/{contestId}/history/{userId}:
+  /hitch/contest/{contestId}/history/{userId}:
     get:
       operationId: HitchController_getUserHistoryAdmin
       parameters:
@@ -442,7 +442,7 @@ paths:
         - apiKey: []
       summary: Get position history for a specific user (admin, API key required)
       tags: *ref_0
-  /api/contest:
+  /contest:
     get:
       operationId: ContestController_getCurrentContest
       parameters:
@@ -490,7 +490,7 @@ paths:
         - apiKey: []
       summary: Create a new contest
       tags: *ref_1
-  /api/contest/list:
+  /contest/list:
     get:
       operationId: ContestController_getContestList
       parameters: []
@@ -505,7 +505,7 @@ paths:
                   $ref: '#/components/schemas/ContestListItemDto'
       summary: Get list of all available contests
       tags: *ref_1
-  /api/contest/logos:
+  /contest/logos:
     get:
       operationId: ContestController_getLogos
       parameters: []
@@ -520,7 +520,7 @@ paths:
                   $ref: '#/components/schemas/LogoItemDto'
       summary: Get list of available contest logos
       tags: *ref_1
-  /api/contest/{contestId}:
+  /contest/{contestId}:
     get:
       operationId: ContestController_getContestById
       parameters:
@@ -588,7 +588,7 @@ paths:
         - apiKey: []
       summary: Delete a contest and all related data
       tags: *ref_1
-  /api/contest/{contestId}/logo:
+  /contest/{contestId}/logo:
     put:
       operationId: ContestController_setContestLogo
       parameters:
@@ -618,7 +618,7 @@ paths:
         - apiKey: []
       summary: Set or clear the logo for a contest
       tags: *ref_1
-  /api/contest/{contestId}/schedule:
+  /contest/{contestId}/schedule:
     get:
       operationId: ContestController_getSchedule
       parameters:
@@ -663,7 +663,7 @@ paths:
         - apiKey: []
       summary: Add a schedule event
       tags: *ref_1
-  /api/contest/{contestId}/schedule/list:
+  /contest/{contestId}/schedule/list:
     get:
       operationId: ContestController_getScheduleEvents
       parameters:
@@ -687,7 +687,7 @@ paths:
         - apiKey: []
       summary: Get flat list of schedule events
       tags: *ref_1
-  /api/contest/{contestId}/schedule/{eventId}:
+  /contest/{contestId}/schedule/{eventId}:
     put:
       operationId: ContestController_updateScheduleEvent
       parameters:
@@ -746,7 +746,7 @@ paths:
         - apiKey: []
       summary: Delete a schedule event
       tags: *ref_1
-  /api/contest/{contestId}/ranking:
+  /contest/{contestId}/ranking:
     get:
       operationId: ContestController_getRanking
       parameters:
@@ -768,7 +768,7 @@ paths:
           description: Contest not found
       summary: Get contest ranking with user data
       tags: *ref_1
-  /api/contest/{contestId}/participants:
+  /contest/{contestId}/participants:
     post:
       operationId: ContestController_addParticipant
       parameters:
@@ -845,7 +845,7 @@ paths:
         - apiKey: []
       summary: Get all participants in the contest (admin only)
       tags: *ref_1
-  /api/contest/{contestId}/populate:
+  /contest/{contestId}/populate:
     post:
       operationId: ContestController_populateUserNames
       parameters:
@@ -874,7 +874,7 @@ paths:
           description: Invalid user ID or contest not found
       summary: Populate user names for contest
       tags: *ref_1
-  /api/contest/{contestId}/prepopulate-randomly:
+  /contest/{contestId}/prepopulate-randomly:
     post:
       operationId: ContestController_prepopulateRandomly
       parameters:
@@ -890,7 +890,7 @@ paths:
           description: Contest not found
       summary: Prepopulate contest with random user names and locations (for testing)
       tags: *ref_1
-  /api/contest/{contestId}/news:
+  /contest/{contestId}/news:
     get:
       operationId: ContestController_getNews
       parameters:
@@ -941,7 +941,7 @@ paths:
         - apiKey: []
       summary: Add a news item to a contest
       tags: *ref_1
-  /api/contest/{contestId}/news/{newsId}:
+  /contest/{contestId}/news/{newsId}:
     put:
       operationId: ContestController_updateNews
       parameters:
@@ -1000,7 +1000,7 @@ paths:
         - apiKey: []
       summary: Delete a news item
       tags: *ref_1
-  /api/contest/{contestId}/qr:
+  /contest/{contestId}/qr:
     get:
       operationId: ContestController_getContestQR
       parameters:
@@ -1026,7 +1026,7 @@ paths:
       tags: *ref_1
 info:
   title: Hitch API
-  description: ''
+  description: The Hitch API documentation
   version: '1.0'
   contact: {}
 tags: []
@@ -1037,6 +1037,7 @@ components:
       type: apiKey
       in: header
       name: Authorization
+      description: 'API Key (format: apikey <key>)'
   schemas:
     PositionDto:
       type: object
