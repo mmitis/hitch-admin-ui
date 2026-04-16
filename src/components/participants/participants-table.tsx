@@ -4,33 +4,22 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useContest } from '@/contexts/contest-context';
 import {
-  contestControllerGetRanking,
+  contestControllerGetParticipants,
   contestControllerAddParticipant,
   contestControllerPopulateUserNames,
   hitchControllerFinishContest,
   hitchControllerResetUser,
   hitchControllerDeleteParticipant,
 } from '@/client/sdk.gen';
-import type { RankingDto } from '@/client/types.gen';
+import type { ContestControllerGetParticipantsResponse } from '@/client/types.gen';
 import { UserQrModal } from '@/components/users/user-qr-modal';
 import { UserHistoryModal } from '@/components/users/user-history-modal';
 
-const ACTIVITY_COLORS: Record<string, string> = {
-  FINISHED:    'bg-green-100 text-green-700',
-  ON_ROAD:     'bg-blue-100 text-blue-700',
-  INACTIVE:    'bg-yellow-100 text-yellow-700',
-  WAITING:     'bg-zinc-100 text-zinc-600',
-  NOT_STARTED: 'bg-purple-100 text-purple-700',
-};
+type Participant = NonNullable<ContestControllerGetParticipantsResponse>[number];
 
-function formatRelativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const min = Math.floor(diff / 60000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h}h ago`;
-  return new Date(iso).toLocaleDateString();
+function formatDate(iso?: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString();
 }
 
 export function ParticipantsTable() {
@@ -46,10 +35,10 @@ export function ParticipantsTable() {
   const [qrUser, setQrUser] = useState<{ id: string; name: string } | null>(null);
   const [historyUser, setHistoryUser] = useState<{ id: string; name: string } | null>(null);
 
-  const { data: rows, isLoading, refetch, isFetching } = useQuery<RankingDto[]>({
-    queryKey: ['ranking', contestId],
+  const { data: rows, isLoading, refetch, isFetching } = useQuery<Participant[]>({
+    queryKey: ['participants', contestId],
     queryFn: async () => {
-      const { data } = await contestControllerGetRanking({ path: { contestId: contestId! } });
+      const { data } = await contestControllerGetParticipants({ path: { contestId: contestId! } });
       return data ?? [];
     },
     enabled: !!contestId,
@@ -57,7 +46,7 @@ export function ParticipantsTable() {
 
   const filtered = (rows ?? []).filter((r) => {
     const q = search.toLowerCase();
-    return r.user.name.toLowerCase().includes(q) || r.user.id.includes(q);
+    return (r.name ?? '').toLowerCase().includes(q) || (r.externalUserId ?? '').includes(q);
   });
 
   const addParticipant = useMutation({
@@ -69,7 +58,7 @@ export function ParticipantsTable() {
       if (error) throw new Error('Failed to add participant');
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['ranking', contestId] });
+      qc.invalidateQueries({ queryKey: ['participants', contestId] });
       setAddId('');
       setAddName('');
       setAddNonTrackable(false);
@@ -85,7 +74,7 @@ export function ParticipantsTable() {
       if (error) throw new Error('Failed to rename');
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['ranking', contestId] });
+      qc.invalidateQueries({ queryKey: ['participants', contestId] });
       setEditingId(null);
     },
   });
@@ -98,7 +87,7 @@ export function ParticipantsTable() {
       });
       if (error) throw new Error('Failed to finish');
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['ranking', contestId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['participants', contestId] }),
   });
 
   const reset = useMutation({
@@ -109,7 +98,7 @@ export function ParticipantsTable() {
       });
       if (error) throw new Error('Failed to reset');
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['ranking', contestId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['participants', contestId] }),
   });
 
   const deleteUser = useMutation({
@@ -120,7 +109,7 @@ export function ParticipantsTable() {
       });
       if (error) throw new Error('Failed to delete');
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['ranking', contestId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['participants', contestId] }),
   });
 
   const inputClass = 'rounded-md border border-zinc-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500';
@@ -206,18 +195,21 @@ export function ParticipantsTable() {
                 <tr className="border-b border-zinc-100 text-left text-xs text-zinc-500 font-semibold">
                   <th className="px-4 py-2.5">#</th>
                   <th className="px-4 py-2.5">Name</th>
-                  <th className="px-4 py-2.5">Status</th>
-                  <th className="px-4 py-2.5">Last location</th>
-                  <th className="px-4 py-2.5">Last update</th>
+                  <th className="px-4 py-2.5">Type</th>
+                  <th className="px-4 py-2.5">Finished</th>
+                  <th className="px-4 py-2.5">Created</th>
                   <th className="px-4 py-2.5">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((row) => (
-                  <tr key={row.user.id} className="border-b border-zinc-50 hover:bg-zinc-50">
-                    <td className="px-4 py-2 text-zinc-500 font-mono text-xs">{row.user.id}</td>
+                {filtered.map((row) => {
+                  const userId = row.externalUserId ?? '';
+                  const name = row.name ?? '';
+                  return (
+                  <tr key={userId} className="border-b border-zinc-50 hover:bg-zinc-50">
+                    <td className="px-4 py-2 text-zinc-500 font-mono text-xs">{userId}</td>
                     <td className="px-4 py-2">
-                      {editingId === row.user.id ? (
+                      {editingId === userId ? (
                         <div className="flex gap-1 items-center">
                           <input
                             value={editName}
@@ -225,12 +217,12 @@ export function ParticipantsTable() {
                             className="rounded border border-zinc-200 px-2 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-36"
                             autoFocus
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') rename.mutate({ userId: row.user.id, name: editName });
+                              if (e.key === 'Enter') rename.mutate({ userId, name: editName });
                               if (e.key === 'Escape') setEditingId(null);
                             }}
                           />
                           <button
-                            onClick={() => rename.mutate({ userId: row.user.id, name: editName })}
+                            onClick={() => rename.mutate({ userId, name: editName })}
                             disabled={rename.isPending}
                             className="px-2 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                           >
@@ -244,63 +236,64 @@ export function ParticipantsTable() {
                           </button>
                         </div>
                       ) : (
-                        <span className="font-medium">{row.user.name}</span>
+                        <span className="font-medium">{name}</span>
                       )}
                     </td>
                     <td className="px-4 py-2">
-                      {(() => {
-                        const displayStatus = row.sent ? row.activityStatus : 'NOT_STARTED';
-                        return (
-                          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${ACTIVITY_COLORS[displayStatus] ?? ACTIVITY_COLORS.WAITING}`}>
-                            {displayStatus.replace('_', ' ')}
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-4 py-2 text-zinc-400 text-xs font-mono">
-                      {row.position
-                        ? `${row.position.lat.toFixed(4)}, ${row.position.lng.toFixed(4)}`
-                        : '—'}
+                      {row.nonTrackable ? (
+                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600">
+                          Non-trackable
+                        </span>
+                      ) : (
+                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                          Trackable
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-2 text-zinc-400 text-xs">
-                      {row.lastPositionUpdate ? formatRelativeTime(String(row.lastPositionUpdate)) : '—'}
+                      {row.finishedAt ? (
+                        <span className="text-green-600 font-medium">{formatDate(row.finishedAt)}</span>
+                      ) : '—'}
+                    </td>
+                    <td className="px-4 py-2 text-zinc-400 text-xs">
+                      {formatDate(row.createdAt)}
                     </td>
                     <td className="px-4 py-2">
                       <div className="flex gap-1 flex-wrap">
                         <button
-                          onClick={() => { setEditingId(row.user.id); setEditName(row.user.name); }}
+                          onClick={() => { setEditingId(userId); setEditName(name); }}
                           className="px-2 py-0.5 text-xs border border-zinc-200 rounded hover:bg-zinc-50"
                         >
                           Edit
                         </button>
                         <button
-                          onClick={() => setQrUser({ id: row.user.id, name: row.user.name })}
+                          onClick={() => setQrUser({ id: userId, name })}
                           className="px-2 py-0.5 text-xs border border-zinc-200 rounded hover:bg-zinc-50"
                         >
                           QR
                         </button>
                         <button
-                          onClick={() => { if (window.confirm(`Finish #${row.user.id}?`)) finish.mutate(row.user.id); }}
+                          onClick={() => { if (window.confirm(`Finish #${userId}?`)) finish.mutate(userId); }}
                           disabled={finish.isPending}
                           className="px-2 py-0.5 text-xs border border-green-200 text-green-700 rounded hover:bg-green-50 disabled:opacity-50"
                         >
                           Finish
                         </button>
                         <button
-                          onClick={() => { if (window.confirm(`Reset #${row.user.id}?`)) reset.mutate(row.user.id); }}
+                          onClick={() => { if (window.confirm(`Reset #${userId}?`)) reset.mutate(userId); }}
                           disabled={reset.isPending}
                           className="px-2 py-0.5 text-xs border border-red-200 text-red-600 rounded hover:bg-red-50 disabled:opacity-50"
                         >
                           Reset
                         </button>
                         <button
-                          onClick={() => setHistoryUser({ id: row.user.id, name: row.user.name })}
+                          onClick={() => setHistoryUser({ id: userId, name })}
                           className="px-2 py-0.5 text-xs border border-zinc-200 rounded hover:bg-zinc-50"
                         >
                           History
                         </button>
                         <button
-                          onClick={() => { if (window.confirm(`Delete participant #${row.user.id} "${row.user.name}"? This permanently removes the user and all their data.`)) deleteUser.mutate(row.user.id); }}
+                          onClick={() => { if (window.confirm(`Delete participant #${userId} "${name}"? This permanently removes the user and all their data.`)) deleteUser.mutate(userId); }}
                           disabled={deleteUser.isPending}
                           className="px-2 py-0.5 text-xs border border-red-300 text-red-700 rounded hover:bg-red-100 disabled:opacity-50 font-medium"
                         >
@@ -309,7 +302,8 @@ export function ParticipantsTable() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-4 py-6 text-center text-sm text-zinc-400">
