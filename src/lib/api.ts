@@ -8,6 +8,7 @@ export function setApiKey(key: string | null) {
 
 client.setConfig({
   baseUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000',
+  auth: () => (_apiKey ? `ApiKey ${_apiKey}` : undefined),
 });
 
 client.interceptors.request.use((request) => {
