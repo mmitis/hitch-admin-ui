@@ -1,0 +1,1542 @@
+openapi: 3.0.0
+paths:
+  /auth/qr:
+    get:
+      operationId: AppController_getAuthQRCode
+      parameters:
+        - name: userId
+          required: true
+          in: query
+          description: User ID (UUID or numeric format)
+          schema:
+            example: 550e8400-e29b-41d4-a716-446655440000
+            type: string
+        - name: name
+          required: true
+          in: query
+          description: User name
+          schema:
+            example: John Doe
+            type: string
+      responses:
+        '200':
+          description: QR code image (PNG)
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Missing userId or name query parameter
+      summary: Generate QR code for authentication (contains Bearer token with base64-encoded userId:name)
+      tags:
+        - app
+  /hitch/contest/{contestId}/map/position:
+    post:
+      operationId: HitchController_addPosition
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: summer-2024
+            type: string
+        - name: Authorization
+          in: header
+          description: 'User authentication (format: Bearer <base64-encoded-userId:contestId>)'
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PositionDto'
+      responses:
+        '201':
+          description: Position added successfully
+        '400':
+          description: Invalid position data, user has already finished, contest not started, or contest ended
+        '403':
+          description: User not authenticated
+        '404':
+          description: Contest not found
+      summary: Add user position to the map
+      tags: &ref_0
+        - hitch
+  /hitch/contest/{contestId}/map/admin:
+    get:
+      operationId: HitchController_getMapPositionsAdmin
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: krakostop-2026
+            type: string
+        - name: Authorization
+          in: header
+          description: 'API Key (format: ApiKey <key>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Map positions with contest start/target info (admin view - includes all participants including non-trackable)
+        '401':
+          description: Invalid or missing API key
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Get all map positions with contest info (admin, API key required)
+      tags: *ref_0
+  /hitch/contest/{contestId}/map:
+    get:
+      operationId: HitchController_getMapPositions
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: summer-2024
+            type: string
+        - name: Authorization
+          in: header
+          description: 'User authentication (format: Bearer <base64-encoded-userId:contestId>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of all positions (excludes non-trackable participants)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MapPositionDto'
+        '400':
+          description: Contest not started or contest ended
+        '403':
+          description: User not authenticated
+        '404':
+          description: Contest not found
+      summary: Get all positions on the map
+      tags: *ref_0
+  /hitch/contest/{contestId}/me:
+    get:
+      operationId: HitchController_getMe
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: krakostop-2026
+            type: string
+        - name: Authorization
+          in: header
+          description: 'User authentication (format: Bearer <base64-encoded-userId:contestId>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current user information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeDto'
+        '403':
+          description: User not authenticated
+        '404':
+          description: Participant not found in contest
+      summary: Get current user info including nonTrackable flag
+      tags: *ref_0
+  /hitch/contest/{contestId}/finish/{userId}:
+    post:
+      operationId: HitchController_finishContest
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: summer-2024
+            type: string
+        - name: userId
+          required: true
+          in: path
+          description: User ID
+          schema:
+            example: 550e8400-e29b-41d4-a716-446655440000
+            type: string
+        - name: Authorization
+          in: header
+          description: 'API Key (format: apikey <key>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Contest finished successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinishDto'
+        '400':
+          description: User has already finished, contest not started, or contest ended
+        '401':
+          description: Invalid or missing API key
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Finish the contest for a specific user
+      tags: *ref_0
+  /hitch/contest/{contestId}/flyover/callback:
+    post:
+      operationId: HitchController_handleFlyoverCallback
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: summer-2024
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlyoverCallbackDto'
+      responses:
+        '201':
+          description: Callback processed successfully
+      security:
+        - apiKey: []
+      summary: Callback endpoint for flyover video generation
+      tags: *ref_0
+  /hitch/contest/{contestId}/flyover/{userId}:
+    get:
+      operationId: HitchController_getFlyoverStatus
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: summer-2024
+            type: string
+        - name: userId
+          required: true
+          in: path
+          description: User ID
+          schema:
+            example: '1'
+            type: string
+      responses:
+        '200':
+          description: Flyover video status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlyoverStatusDto'
+      summary: Get flyover video status for a user
+      tags: *ref_0
+  /hitch/contest/{contestId}/ranking:
+    get:
+      operationId: HitchController_getRanking
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: summer-2024
+            type: string
+      responses:
+        '200':
+          description: List of users ranked by performance
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RankingDto'
+        '404':
+          description: Contest not found
+      summary: Get user rankings sorted by finish time, then by distance to target
+      tags: *ref_0
+  /hitch/contest/{contestId}/clear:
+    delete:
+      operationId: HitchController_clearContest
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: krakostop-2026
+            type: string
+        - name: Authorization
+          in: header
+          description: 'API Key (format: ApiKey <key>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contest data cleared successfully
+        '401':
+          description: Invalid or missing API key
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Clear all contest data (positions, history, finished status, news)
+      tags: *ref_0
+  /hitch/contest/{contestId}/reset/{userId}:
+    delete:
+      operationId: HitchController_resetUser
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: krakostop-2026
+            type: string
+        - name: userId
+          required: true
+          in: path
+          description: User ID to reset
+          schema:
+            example: '1'
+            type: string
+        - name: Authorization
+          in: header
+          description: 'API Key (format: apikey <key>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User position and history reset successfully
+        '401':
+          description: Invalid or missing API key
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Reset position and history for a specific user
+      tags: *ref_0
+  /hitch/contest/{contestId}/participant/{userId}:
+    delete:
+      operationId: HitchController_deleteParticipant
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: krakostop-2026
+            type: string
+        - name: userId
+          required: true
+          in: path
+          description: User ID to delete
+          schema:
+            example: '1'
+            type: string
+        - name: Authorization
+          in: header
+          description: 'API Key (format: ApiKey <key>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Participant deleted successfully
+        '401':
+          description: Invalid or missing API key
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Delete a participant and all their data (admin, API key required)
+      tags: *ref_0
+  /hitch/contest/{contestId}/history:
+    get:
+      operationId: HitchController_getUserHistory
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: summer-2024
+            type: string
+        - name: Authorization
+          in: header
+          description: 'User authentication (format: Bearer <base64-encoded-userId:contestId>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: All registered position history points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PositionHistoryDto'
+        '403':
+          description: User not authenticated
+      summary: Get all position history for the current user
+      tags: *ref_0
+  /hitch/contest/{contestId}/history/{userId}:
+    get:
+      operationId: HitchController_getUserHistoryAdmin
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          description: Contest ID
+          schema:
+            example: krakostop-2026
+            type: string
+        - name: userId
+          required: true
+          in: path
+          description: User ID
+          schema:
+            example: '1'
+            type: string
+        - name: Authorization
+          in: header
+          description: 'API Key (format: ApiKey <key>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Position history for the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PositionHistoryDto'
+        '401':
+          description: Invalid or missing API key
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Get position history for a specific user (admin, API key required)
+      tags: *ref_0
+  /contest:
+    get:
+      operationId: ContestController_getCurrentContest
+      parameters:
+        - name: Authorization
+          in: header
+          description: 'User authentication (format: Bearer <base64-encoded-userId:contestId>)'
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contest data for the authenticated user's contest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentContestDto'
+        '403':
+          description: User not authenticated
+        '404':
+          description: Contest not found
+      summary: Get contest information for authenticated user
+      tags: &ref_1
+        - contest
+    post:
+      operationId: ContestController_createContest
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContestDto'
+      responses:
+        '201':
+          description: Contest created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentContestDto'
+        '400':
+          description: Contest ID already exists
+        '401':
+          description: Unauthorized
+      security:
+        - apiKey: []
+      summary: Create a new contest
+      tags: *ref_1
+  /contest/list:
+    get:
+      operationId: ContestController_getContestList
+      parameters: []
+      responses:
+        '200':
+          description: List of contests with ID and name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContestListItemDto'
+      summary: Get list of all available contests
+      tags: *ref_1
+  /contest/logos:
+    get:
+      operationId: ContestController_getLogos
+      parameters: []
+      responses:
+        '200':
+          description: Available logo files served from /resources/
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LogoItemDto'
+      summary: Get list of available contest logos
+      tags: *ref_1
+  /contest/{contestId}:
+    get:
+      operationId: ContestController_getContestById
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contest data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentContestDto'
+        '404':
+          description: Contest not found
+      summary: Get contest by ID
+      tags: *ref_1
+    put:
+      operationId: ContestController_updateContest
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContestDto'
+      responses:
+        '200':
+          description: Contest updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentContestDto'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Update a contest
+      tags: *ref_1
+    delete:
+      operationId: ContestController_deleteContest
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contest deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Delete a contest and all related data
+      tags: *ref_1
+  /contest/{contestId}/logo:
+    put:
+      operationId: ContestController_setContestLogo
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetContestLogoDto'
+      responses:
+        '200':
+          description: Contest logo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentContestDto'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Set or clear the logo for a contest
+      tags: *ref_1
+  /contest/{contestId}/schedule:
+    get:
+      operationId: ContestController_getSchedule
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Schedule events grouped by day (UTC midnight ISO string as key)
+        '404':
+          description: Contest not found
+      summary: Get contest schedule grouped by day
+      tags: *ref_1
+    post:
+      operationId: ContestController_addScheduleEvent
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScheduleEventDto'
+      responses:
+        '201':
+          description: Schedule event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleEventDto'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Add a schedule event
+      tags: *ref_1
+  /contest/{contestId}/schedule/list:
+    get:
+      operationId: ContestController_getScheduleEvents
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of schedule events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduleEventDto'
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Get flat list of schedule events
+      tags: *ref_1
+  /contest/{contestId}/schedule/{eventId}:
+    put:
+      operationId: ContestController_updateScheduleEvent
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: eventId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScheduleEventDto'
+      responses:
+        '200':
+          description: Schedule event updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleEventDto'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Contest or event not found
+      security:
+        - apiKey: []
+      summary: Update a schedule event
+      tags: *ref_1
+    delete:
+      operationId: ContestController_deleteScheduleEvent
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: eventId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Schedule event deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Contest or event not found
+      security:
+        - apiKey: []
+      summary: Delete a schedule event
+      tags: *ref_1
+  /contest/{contestId}/ranking:
+    get:
+      operationId: ContestController_getRanking
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contest ranking with users and their locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RankingDto'
+        '404':
+          description: Contest not found
+      summary: Get contest ranking with user data
+      tags: *ref_1
+  /contest/{contestId}/participants:
+    post:
+      operationId: ContestController_addParticipant
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - name
+              properties:
+                userId:
+                  type: string
+                  example: '1'
+                name:
+                  type: string
+                  example: John Doe
+                nonTrackable:
+                  type: boolean
+                  example: false
+                  description: If true, participant will not appear in rankings
+      responses:
+        '201':
+          description: Participant added successfully
+        '400':
+          description: User already registered or contest is full
+        '404':
+          description: Contest not found
+      security:
+        - api-key: []
+      summary: Add a participant to the contest
+      tags: *ref_1
+    get:
+      operationId: ContestController_getParticipants
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of all participants including non-trackable ones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                    externalUserId:
+                      type: string
+                    name:
+                      type: string
+                    nonTrackable:
+                      type: boolean
+                    finishedAt:
+                      type: string
+                      nullable: true
+                    createdAt:
+                      type: string
+        '404':
+          description: Contest not found
+      security:
+        - api-key: []
+      summary: Get all participants in the contest (admin only)
+      tags: *ref_1
+  /contest/{contestId}/populate:
+    post:
+      operationId: ContestController_populateUserNames
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: Mapping of user IDs to names
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                '1': John Doe
+                '2': Jane Smith
+                '3': Danny, Victor
+      responses:
+        '200':
+          description: User names populated successfully
+        '400':
+          description: Invalid user ID or contest not found
+      summary: Populate user names for contest
+      tags: *ref_1
+  /contest/{contestId}/prepopulate-randomly:
+    post:
+      operationId: ContestController_prepopulateRandomly
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contest prepopulated with random data
+        '404':
+          description: Contest not found
+      summary: Prepopulate contest with random user names and locations (for testing)
+      tags: *ref_1
+  /contest/{contestId}/news:
+    get:
+      operationId: ContestController_getNews
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of news items sorted by time (newest first)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsItemDto'
+        '404':
+          description: Contest not found
+      summary: Get news for a contest
+      tags: *ref_1
+    post:
+      operationId: ContestController_addNews
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNewsDto'
+      responses:
+        '201':
+          description: News item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsItemDto'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Contest not found
+      security:
+        - apiKey: []
+      summary: Add a news item to a contest
+      tags: *ref_1
+  /contest/{contestId}/news/{newsId}:
+    put:
+      operationId: ContestController_updateNews
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: newsId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNewsDto'
+      responses:
+        '200':
+          description: News item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsItemDto'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Contest or news item not found
+      security:
+        - apiKey: []
+      summary: Update a news item
+      tags: *ref_1
+    delete:
+      operationId: ContestController_deleteNews
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: newsId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: News item deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Contest or news item not found
+      security:
+        - apiKey: []
+      summary: Delete a news item
+      tags: *ref_1
+  /contest/{contestId}/qr:
+    get:
+      operationId: ContestController_getContestQR
+      parameters:
+        - name: contestId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: userId
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: QR code image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+      summary: Generate QR code for contest
+      tags: *ref_1
+info:
+  title: Hitch API
+  description: The Hitch API documentation
+  version: '1.0'
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'API Key (format: apikey <key>)'
+  schemas:
+    PositionDto:
+      type: object
+      properties:
+        lng:
+          type: number
+          description: Longitude coordinate
+          example: -122.4194
+        lat:
+          type: number
+          description: Latitude coordinate
+          example: 37.7749
+      required:
+        - lng
+        - lat
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          description: User name
+          example: John Doe
+      required:
+        - id
+        - name
+    MapPositionDto:
+      type: object
+      properties:
+        user:
+          description: User information
+          allOf:
+            - $ref: '#/components/schemas/UserDto'
+        position:
+          description: Position coordinates
+          allOf:
+            - $ref: '#/components/schemas/PositionDto'
+      required:
+        - user
+        - position
+    MeDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User external ID
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          description: User name
+          example: John Doe
+        nonTrackable:
+          type: boolean
+          description: Whether the participant is non-trackable (does not send positions)
+          example: false
+      required:
+        - id
+        - name
+        - nonTrackable
+    FinishDto:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: User ID
+          example: 550e8400-e29b-41d4-a716-446655440000
+        finishedAt:
+          format: date-time
+          type: string
+          description: Finish date and time
+          example: '2024-06-15T14:30:00Z'
+        flyoverJobId:
+          type: string
+          description: Flyover video generation job ID (if flyover API is configured)
+          example: a1b2c3d4e5f6
+      required:
+        - userId
+        - finishedAt
+    FlyoverCallbackDto:
+      type: object
+      properties:
+        job_id:
+          type: string
+          description: Flyover job ID
+        status:
+          type: string
+          description: Job status
+          enum:
+            - completed
+            - failed
+        url:
+          type: string
+          description: Presigned URL for the generated video
+        error:
+          type: string
+          description: Error message if the job failed
+      required:
+        - job_id
+        - status
+    FlyoverStatusDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Flyover video status
+          enum:
+            - none
+            - pending
+            - completed
+            - failed
+          example: completed
+        url:
+          type: string
+          description: Presigned URL for the generated video (when status is completed)
+          example: https://s3.example.com/flyover-videos/abc123.mp4?...
+        error:
+          type: string
+          description: Error message (when status is failed)
+      required:
+        - status
+    RankingDto:
+      type: object
+      properties:
+        user:
+          description: User information
+          allOf:
+            - $ref: '#/components/schemas/UserDto'
+        position:
+          description: Position coordinates
+          allOf:
+            - $ref: '#/components/schemas/PositionDto'
+        lastPosition:
+          description: Last position coordinates (previous update)
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PositionDto'
+        status:
+          type: string
+          description: User status
+          example: finished
+          enum:
+            - finished
+            - in_progress
+        endDate:
+          type: object
+          description: Contest end date (null if not finished)
+          example: '2024-06-15T14:30:00Z'
+          nullable: true
+        lastPositionUpdate:
+          format: date-time
+          type: string
+          description: Timestamp of last position update
+          example: '2024-06-15T14:30:00Z'
+        sent:
+          type: boolean
+          description: Whether the participant has sent at least one position update
+          example: true
+        distance:
+          type: number
+          description: Distance in kilometers from the contest target
+          example: 42.5
+        progressPercentage:
+          type: number
+          description: Percentage of total distance covered from starting position to target
+          example: 67.8
+        activityStatus:
+          type: string
+          description: 'Activity status: FINISHED (race completed), INACTIVE (no position update for 1h), ON_ROAD (moved >100m in last 1h), WAITING (position unchanged)'
+          example: ON_ROAD
+          enum:
+            - FINISHED
+            - INACTIVE
+            - ON_ROAD
+            - WAITING
+      required:
+        - user
+        - position
+        - lastPosition
+        - status
+        - endDate
+        - lastPositionUpdate
+        - sent
+        - distance
+        - progressPercentage
+        - activityStatus
+    PositionHistoryDto:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: User ID
+        contestId:
+          type: string
+          description: Contest ID
+        position:
+          description: Position coordinates
+          allOf:
+            - $ref: '#/components/schemas/PositionDto'
+        timestamp:
+          format: date-time
+          type: string
+          description: Timestamp when position was recorded
+      required:
+        - userId
+        - contestId
+        - position
+        - timestamp
+    TargetPositionDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Contest name
+          example: Summer Hitch Challenge 2024
+        lng:
+          type: number
+          description: Longitude coordinate
+          example: -122.4194
+        lat:
+          type: number
+          description: Latitude coordinate
+          example: 37.7749
+      required:
+        - name
+        - lng
+        - lat
+    CurrentContestDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Contest ID/code
+          example: krakostop-2026
+        name:
+          type: string
+          description: Contest name
+          example: Golden Gate Meetup
+        members:
+          type: number
+          description: Maximum number of members allowed in the contest
+          example: 10
+        dateStart:
+          format: date-time
+          type: string
+          description: Contest start date
+          example: '2024-06-01T00:00:00Z'
+        dateEnd:
+          format: date-time
+          type: string
+          description: Contest end date
+          example: '2024-08-31T23:59:59Z'
+        targetPosition:
+          description: Target position coordinates
+          allOf:
+            - $ref: '#/components/schemas/TargetPositionDto'
+        startingPosition:
+          description: Starting position coordinates
+          allOf:
+            - $ref: '#/components/schemas/TargetPositionDto'
+        organizerPhoneNumber:
+          type: string
+          description: Organizer phone number
+          example: +48 123 456 789
+        logoUrl:
+          type: object
+          description: URL path to contest logo (relative to API root)
+          example: /resources/logo_001.png
+          nullable: true
+      required:
+        - id
+        - name
+        - members
+        - dateStart
+        - dateEnd
+        - targetPosition
+        - startingPosition
+        - organizerPhoneNumber
+        - logoUrl
+    ContestListItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Contest ID/code
+          example: summer-2024
+        name:
+          type: string
+          description: Contest name
+          example: Krakostop 2026
+        members:
+          type: number
+          description: Maximum number of members allowed in the contest
+          example: 10
+      required:
+        - id
+        - name
+        - members
+    LogoItemDto:
+      type: object
+      properties:
+        filename:
+          type: string
+          description: Logo filename
+          example: logo_001.png
+        url:
+          type: string
+          description: URL path to logo
+          example: /resources/logo_001.png
+      required:
+        - filename
+        - url
+    PositionInputDto:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Position name
+          example: Krakow, AGH
+        lat:
+          type: number
+          description: Latitude
+          example: 50.065
+        lng:
+          type: number
+          description: Longitude
+          example: 19.922
+      required:
+        - name
+        - lat
+        - lng
+    CreateContestDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Contest ID (slug)
+          example: krakostop-2026
+        name:
+          type: string
+          description: Contest name
+          example: Krakostop 2026
+        members:
+          type: number
+          description: Max members
+          example: 80
+        dateStart:
+          type: string
+          description: Start date (ISO 8601)
+          example: '2026-02-08T00:00:00Z'
+        dateEnd:
+          type: string
+          description: End date (ISO 8601)
+          example: '2026-02-16T23:59:59Z'
+        startingPosition:
+          description: Starting position
+          allOf:
+            - $ref: '#/components/schemas/PositionInputDto'
+        targetPosition:
+          description: Target position
+          allOf:
+            - $ref: '#/components/schemas/PositionInputDto'
+        organizerPhoneNumber:
+          type: string
+          description: Organizer phone number
+          example: +48 123 456 789
+      required:
+        - id
+        - name
+        - members
+        - dateStart
+        - dateEnd
+        - startingPosition
+        - targetPosition
+        - organizerPhoneNumber
+    UpdateContestDto:
+      type: object
+      properties:
+        name:
+          type: string
+        members:
+          type: number
+        dateStart:
+          type: string
+        dateEnd:
+          type: string
+        startingPosition:
+          $ref: '#/components/schemas/PositionInputDto'
+        targetPosition:
+          $ref: '#/components/schemas/PositionInputDto'
+        organizerPhoneNumber:
+          type: string
+    SetContestLogoDto:
+      type: object
+      properties:
+        logo:
+          type: object
+          description: Logo filename (from /contest/logos list), or null to remove
+          example: logo_001.png
+          nullable: true
+    ScheduleEventDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Schedule event ID
+          example: '1'
+        time:
+          type: string
+          description: Event start time (ISO 8601)
+          example: '2026-06-20T08:00:00Z'
+        duration:
+          type: number
+          description: Event duration in milliseconds (0 = instant)
+          example: 3600000
+        name:
+          type: string
+          description: Event name
+          example: Registration & Briefing
+      required:
+        - time
+        - duration
+        - name
+    CreateScheduleEventDto:
+      type: object
+      properties:
+        time:
+          type: string
+          description: Event time (ISO 8601)
+          example: '2026-02-08T08:00:00Z'
+        duration:
+          type: number
+          description: Duration in milliseconds (0 = instant)
+          example: 3600000
+        name:
+          type: string
+          description: Event name
+          example: Registration & Briefing
+      required:
+        - time
+        - duration
+        - name
+    UpdateScheduleEventDto:
+      type: object
+      properties:
+        time:
+          type: string
+        duration:
+          type: number
+        name:
+          type: string
+    NewsItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: News item ID
+          example: '1'
+        title:
+          type: string
+          description: News title
+          example: Race starts tomorrow!
+        description:
+          type: string
+          description: News description/body
+          example: Get ready for the big day. Meet at AGH campus at 8:00.
+        time:
+          type: string
+          description: Publication time (ISO 8601)
+          example: '2026-06-19T18:00:00Z'
+      required:
+        - id
+        - title
+        - description
+        - time
+    CreateNewsDto:
+      type: object
+      properties:
+        title:
+          type: string
+          description: News title
+          example: Race starts tomorrow!
+        description:
+          type: string
+          description: News description/body
+          example: Get ready for the big day.
+      required:
+        - title
+        - description
+    UpdateNewsDto:
+      type: object
+      properties:
+        title:
+          type: string
+          description: News title
+          example: Updated title
+        description:
+          type: string
+          description: News description/body
+          example: Updated description.

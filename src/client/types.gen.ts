@@ -37,6 +37,21 @@ export type MapPositionDto = {
     position: PositionDto;
 };
 
+export type MeDto = {
+    /**
+     * User external ID
+     */
+    id: string;
+    /**
+     * User name
+     */
+    name: string;
+    /**
+     * Whether the participant is non-trackable (does not send positions)
+     */
+    nonTrackable: boolean;
+};
+
 export type FinishDto = {
     /**
      * User ID
@@ -112,7 +127,7 @@ export type RankingDto = {
     /**
      * Timestamp of last position update
      */
-    lastPositionUpdate: string | null;
+    lastPositionUpdate: string;
     /**
      * Whether the participant has sent at least one position update
      */
@@ -485,7 +500,7 @@ export type HitchControllerGetMapPositionsAdminErrors = {
 
 export type HitchControllerGetMapPositionsAdminResponses = {
     /**
-     * Map positions with contest start/target info
+     * Map positions with contest start/target info (admin view - includes all participants including non-trackable)
      */
     200: unknown;
 };
@@ -525,12 +540,50 @@ export type HitchControllerGetMapPositionsErrors = {
 
 export type HitchControllerGetMapPositionsResponses = {
     /**
-     * List of all positions
+     * List of all positions (excludes non-trackable participants)
      */
     200: Array<MapPositionDto>;
 };
 
 export type HitchControllerGetMapPositionsResponse = HitchControllerGetMapPositionsResponses[keyof HitchControllerGetMapPositionsResponses];
+
+export type HitchControllerGetMeData = {
+    body?: never;
+    headers: {
+        /**
+         * User authentication (format: Bearer <base64-encoded-userId:contestId>)
+         */
+        Authorization: string;
+    };
+    path: {
+        /**
+         * Contest ID
+         */
+        contestId: string;
+    };
+    query?: never;
+    url: '/hitch/contest/{contestId}/me';
+};
+
+export type HitchControllerGetMeErrors = {
+    /**
+     * User not authenticated
+     */
+    403: unknown;
+    /**
+     * Participant not found in contest
+     */
+    404: unknown;
+};
+
+export type HitchControllerGetMeResponses = {
+    /**
+     * Current user information
+     */
+    200: MeDto;
+};
+
+export type HitchControllerGetMeResponse = HitchControllerGetMeResponses[keyof HitchControllerGetMeResponses];
 
 export type HitchControllerFinishContestData = {
     body?: never;
@@ -844,14 +897,31 @@ export type HitchControllerGetUserHistoryAdminResponse = HitchControllerGetUserH
 
 export type ContestControllerGetCurrentContestData = {
     body?: never;
+    headers: {
+        /**
+         * User authentication (format: Bearer <base64-encoded-userId:contestId>)
+         */
+        Authorization: string;
+    };
     path?: never;
     query?: never;
     url: '/contest';
 };
 
+export type ContestControllerGetCurrentContestErrors = {
+    /**
+     * User not authenticated
+     */
+    403: unknown;
+    /**
+     * Contest not found
+     */
+    404: unknown;
+};
+
 export type ContestControllerGetCurrentContestResponses = {
     /**
-     * Current contest data
+     * Contest data for the authenticated user's contest
      */
     200: CurrentContestDto;
 };
@@ -1187,10 +1257,46 @@ export type ContestControllerGetRankingResponses = {
 
 export type ContestControllerGetRankingResponse = ContestControllerGetRankingResponses[keyof ContestControllerGetRankingResponses];
 
+export type ContestControllerGetParticipantsData = {
+    body?: never;
+    path: {
+        contestId: string;
+    };
+    query?: never;
+    url: '/contest/{contestId}/participants';
+};
+
+export type ContestControllerGetParticipantsErrors = {
+    /**
+     * Contest not found
+     */
+    404: unknown;
+};
+
+export type ContestControllerGetParticipantsResponses = {
+    /**
+     * List of all participants including non-trackable ones
+     */
+    200: Array<{
+        id?: number;
+        externalUserId?: string;
+        name?: string;
+        nonTrackable?: boolean;
+        finishedAt?: string | null;
+        createdAt?: string;
+    }>;
+};
+
+export type ContestControllerGetParticipantsResponse = ContestControllerGetParticipantsResponses[keyof ContestControllerGetParticipantsResponses];
+
 export type ContestControllerAddParticipantData = {
     body: {
         userId: string;
         name: string;
+        /**
+         * If true, participant will not appear in rankings
+         */
+        nonTrackable?: boolean;
     };
     path: {
         contestId: string;

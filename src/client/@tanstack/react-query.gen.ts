@@ -3,8 +3,8 @@
 import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { appControllerGetAuthQrCode, contestControllerAddNews, contestControllerAddParticipant, contestControllerAddScheduleEvent, contestControllerCreateContest, contestControllerDeleteContest, contestControllerDeleteNews, contestControllerDeleteScheduleEvent, contestControllerGetContestById, contestControllerGetContestList, contestControllerGetContestQr, contestControllerGetCurrentContest, contestControllerGetLogos, contestControllerGetNews, contestControllerGetRanking, contestControllerGetSchedule, contestControllerGetScheduleEvents, contestControllerPopulateUserNames, contestControllerPrepopulateRandomly, contestControllerSetContestLogo, contestControllerUpdateContest, contestControllerUpdateNews, contestControllerUpdateScheduleEvent, hitchControllerAddPosition, hitchControllerClearContest, hitchControllerFinishContest, hitchControllerGetFlyoverStatus, hitchControllerGetMapPositions, hitchControllerGetMapPositionsAdmin, hitchControllerGetRanking, hitchControllerGetUserHistory, hitchControllerGetUserHistoryAdmin, hitchControllerHandleFlyoverCallback, hitchControllerResetUser, type Options } from '../sdk.gen';
-import type { AppControllerGetAuthQrCodeData, AppControllerGetAuthQrCodeResponse, ContestControllerAddNewsData, ContestControllerAddNewsResponse, ContestControllerAddParticipantData, ContestControllerAddScheduleEventData, ContestControllerAddScheduleEventResponse, ContestControllerCreateContestData, ContestControllerCreateContestResponse, ContestControllerDeleteContestData, ContestControllerDeleteNewsData, ContestControllerDeleteScheduleEventData, ContestControllerGetContestByIdData, ContestControllerGetContestByIdResponse, ContestControllerGetContestListData, ContestControllerGetContestListResponse, ContestControllerGetContestQrData, ContestControllerGetContestQrResponse, ContestControllerGetCurrentContestData, ContestControllerGetCurrentContestResponse, ContestControllerGetLogosData, ContestControllerGetLogosResponse, ContestControllerGetNewsData, ContestControllerGetNewsResponse, ContestControllerGetRankingData, ContestControllerGetRankingResponse, ContestControllerGetScheduleData, ContestControllerGetScheduleEventsData, ContestControllerGetScheduleEventsResponse, ContestControllerPopulateUserNamesData, ContestControllerPrepopulateRandomlyData, ContestControllerSetContestLogoData, ContestControllerSetContestLogoResponse, ContestControllerUpdateContestData, ContestControllerUpdateContestResponse, ContestControllerUpdateNewsData, ContestControllerUpdateNewsResponse, ContestControllerUpdateScheduleEventData, ContestControllerUpdateScheduleEventResponse, HitchControllerAddPositionData, HitchControllerClearContestData, HitchControllerFinishContestData, HitchControllerFinishContestResponse, HitchControllerGetFlyoverStatusData, HitchControllerGetFlyoverStatusResponse, HitchControllerGetMapPositionsAdminData, HitchControllerGetMapPositionsData, HitchControllerGetMapPositionsResponse, HitchControllerGetRankingData, HitchControllerGetRankingResponse, HitchControllerGetUserHistoryAdminData, HitchControllerGetUserHistoryAdminResponse, HitchControllerGetUserHistoryData, HitchControllerGetUserHistoryResponse, HitchControllerHandleFlyoverCallbackData, HitchControllerResetUserData } from '../types.gen';
+import { appControllerGetAuthQrCode, contestControllerAddNews, contestControllerAddParticipant, contestControllerAddScheduleEvent, contestControllerCreateContest, contestControllerDeleteContest, contestControllerDeleteNews, contestControllerDeleteScheduleEvent, contestControllerGetContestById, contestControllerGetContestList, contestControllerGetContestQr, contestControllerGetCurrentContest, contestControllerGetLogos, contestControllerGetNews, contestControllerGetParticipants, contestControllerGetRanking, contestControllerGetSchedule, contestControllerGetScheduleEvents, contestControllerPopulateUserNames, contestControllerPrepopulateRandomly, contestControllerSetContestLogo, contestControllerUpdateContest, contestControllerUpdateNews, contestControllerUpdateScheduleEvent, hitchControllerAddPosition, hitchControllerClearContest, hitchControllerDeleteParticipant, hitchControllerFinishContest, hitchControllerGetFlyoverStatus, hitchControllerGetMapPositions, hitchControllerGetMapPositionsAdmin, hitchControllerGetMe, hitchControllerGetRanking, hitchControllerGetUserHistory, hitchControllerGetUserHistoryAdmin, hitchControllerHandleFlyoverCallback, hitchControllerResetUser, type Options } from '../sdk.gen';
+import type { AppControllerGetAuthQrCodeData, AppControllerGetAuthQrCodeResponse, ContestControllerAddNewsData, ContestControllerAddNewsResponse, ContestControllerAddParticipantData, ContestControllerAddScheduleEventData, ContestControllerAddScheduleEventResponse, ContestControllerCreateContestData, ContestControllerCreateContestResponse, ContestControllerDeleteContestData, ContestControllerDeleteNewsData, ContestControllerDeleteScheduleEventData, ContestControllerGetContestByIdData, ContestControllerGetContestByIdResponse, ContestControllerGetContestListData, ContestControllerGetContestListResponse, ContestControllerGetContestQrData, ContestControllerGetContestQrResponse, ContestControllerGetCurrentContestData, ContestControllerGetCurrentContestResponse, ContestControllerGetLogosData, ContestControllerGetLogosResponse, ContestControllerGetNewsData, ContestControllerGetNewsResponse, ContestControllerGetParticipantsData, ContestControllerGetParticipantsResponse, ContestControllerGetRankingData, ContestControllerGetRankingResponse, ContestControllerGetScheduleData, ContestControllerGetScheduleEventsData, ContestControllerGetScheduleEventsResponse, ContestControllerPopulateUserNamesData, ContestControllerPrepopulateRandomlyData, ContestControllerSetContestLogoData, ContestControllerSetContestLogoResponse, ContestControllerUpdateContestData, ContestControllerUpdateContestResponse, ContestControllerUpdateNewsData, ContestControllerUpdateNewsResponse, ContestControllerUpdateScheduleEventData, ContestControllerUpdateScheduleEventResponse, HitchControllerAddPositionData, HitchControllerClearContestData, HitchControllerDeleteParticipantData, HitchControllerFinishContestData, HitchControllerFinishContestResponse, HitchControllerGetFlyoverStatusData, HitchControllerGetFlyoverStatusResponse, HitchControllerGetMapPositionsAdminData, HitchControllerGetMapPositionsData, HitchControllerGetMapPositionsResponse, HitchControllerGetMeData, HitchControllerGetMeResponse, HitchControllerGetRankingData, HitchControllerGetRankingResponse, HitchControllerGetUserHistoryAdminData, HitchControllerGetUserHistoryAdminResponse, HitchControllerGetUserHistoryData, HitchControllerGetUserHistoryResponse, HitchControllerHandleFlyoverCallbackData, HitchControllerResetUserData } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -108,6 +108,24 @@ export const hitchControllerGetMapPositionsOptions = (options: Options<HitchCont
         return data;
     },
     queryKey: hitchControllerGetMapPositionsQueryKey(options)
+});
+
+export const hitchControllerGetMeQueryKey = (options: Options<HitchControllerGetMeData>) => createQueryKey('hitchControllerGetMe', options);
+
+/**
+ * Get current user info including nonTrackable flag
+ */
+export const hitchControllerGetMeOptions = (options: Options<HitchControllerGetMeData>) => queryOptions<HitchControllerGetMeResponse, DefaultError, HitchControllerGetMeResponse, ReturnType<typeof hitchControllerGetMeQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await hitchControllerGetMe({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: hitchControllerGetMeQueryKey(options)
 });
 
 /**
@@ -214,6 +232,23 @@ export const hitchControllerResetUserMutation = (options?: Partial<Options<Hitch
     return mutationOptions;
 };
 
+/**
+ * Delete a participant and all their data (admin, API key required)
+ */
+export const hitchControllerDeleteParticipantMutation = (options?: Partial<Options<HitchControllerDeleteParticipantData>>): UseMutationOptions<unknown, DefaultError, Options<HitchControllerDeleteParticipantData>> => {
+    const mutationOptions: UseMutationOptions<unknown, DefaultError, Options<HitchControllerDeleteParticipantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await hitchControllerDeleteParticipant({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
 export const hitchControllerGetUserHistoryQueryKey = (options: Options<HitchControllerGetUserHistoryData>) => createQueryKey('hitchControllerGetUserHistory', options);
 
 /**
@@ -250,12 +285,12 @@ export const hitchControllerGetUserHistoryAdminOptions = (options: Options<Hitch
     queryKey: hitchControllerGetUserHistoryAdminQueryKey(options)
 });
 
-export const contestControllerGetCurrentContestQueryKey = (options?: Options<ContestControllerGetCurrentContestData>) => createQueryKey('contestControllerGetCurrentContest', options);
+export const contestControllerGetCurrentContestQueryKey = (options: Options<ContestControllerGetCurrentContestData>) => createQueryKey('contestControllerGetCurrentContest', options);
 
 /**
- * Get current contest information
+ * Get contest information for authenticated user
  */
-export const contestControllerGetCurrentContestOptions = (options?: Options<ContestControllerGetCurrentContestData>) => queryOptions<ContestControllerGetCurrentContestResponse, DefaultError, ContestControllerGetCurrentContestResponse, ReturnType<typeof contestControllerGetCurrentContestQueryKey>>({
+export const contestControllerGetCurrentContestOptions = (options: Options<ContestControllerGetCurrentContestData>) => queryOptions<ContestControllerGetCurrentContestResponse, DefaultError, ContestControllerGetCurrentContestResponse, ReturnType<typeof contestControllerGetCurrentContestQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await contestControllerGetCurrentContest({
             ...options,
@@ -493,6 +528,24 @@ export const contestControllerGetRankingOptions = (options: Options<ContestContr
         return data;
     },
     queryKey: contestControllerGetRankingQueryKey(options)
+});
+
+export const contestControllerGetParticipantsQueryKey = (options: Options<ContestControllerGetParticipantsData>) => createQueryKey('contestControllerGetParticipants', options);
+
+/**
+ * Get all participants in the contest (admin only)
+ */
+export const contestControllerGetParticipantsOptions = (options: Options<ContestControllerGetParticipantsData>) => queryOptions<ContestControllerGetParticipantsResponse, DefaultError, ContestControllerGetParticipantsResponse, ReturnType<typeof contestControllerGetParticipantsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await contestControllerGetParticipants({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: contestControllerGetParticipantsQueryKey(options)
 });
 
 /**
