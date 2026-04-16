@@ -218,8 +218,7 @@ export function QrPdfButton() {
             });
           }
         } catch { /* leave blank */ }
-
-        renderParticipantCard(doc, {
+        const params = {
           participantNumber: n,
           participantName: stripPolish(nameMap[String(n)] ?? '—'),
           contestName: stripPolish(contestName),
@@ -228,7 +227,9 @@ export function QrPdfButton() {
           fontBold,
           logoPng,
           qrBase64,
-        });
+        };
+        console.log(params)
+        renderParticipantCard(doc, params);
 
         // Convert individual PDF to bytes and add to zip
         const bytes = doc.output('arraybuffer');
