@@ -132,25 +132,34 @@ export function ParticipantsTable() {
       {/* Add participant */}
       <div className="bg-white border border-zinc-200 rounded-xl p-4">
         <p className="text-xs font-semibold text-zinc-400 mb-2">Add Participant</p>
-        <div className="flex gap-2 flex-wrap">
-          <input
-            type="number"
-            placeholder="#"
-            value={addId}
-            onChange={(e) => setAddId(e.target.value)}
-            min={1}
-            className={`w-20 ${inputClass}`}
-          />
-          <input
-            type="text"
-            placeholder="Name"
-            value={addName}
-            onChange={(e) => setAddName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && addId.trim() && addName.trim()) addParticipant.mutate();
-            }}
-            className={`flex-1 min-w-[140px] ${inputClass}`}
-          />
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <input
+              type="number"
+              placeholder="#"
+              value={addId}
+              onChange={(e) => setAddId(e.target.value)}
+              min={1}
+              className={`w-20 ${inputClass}`}
+            />
+            <input
+              type="text"
+              placeholder="Name"
+              value={addName}
+              onChange={(e) => setAddName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && addId.trim() && addName.trim()) addParticipant.mutate();
+              }}
+              className={`flex-1 min-w-[140px] ${inputClass}`}
+            />
+            <button
+              onClick={() => addParticipant.mutate()}
+              disabled={addParticipant.isPending || !addId.trim() || !addName.trim()}
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {addParticipant.isPending ? 'Adding…' : 'Add'}
+            </button>
+          </div>
           <label className="flex items-center gap-1.5 text-xs text-zinc-500 cursor-pointer select-none">
             <input
               type="checkbox"
@@ -160,13 +169,6 @@ export function ParticipantsTable() {
             />
             Non-trackable
           </label>
-          <button
-            onClick={() => addParticipant.mutate()}
-            disabled={addParticipant.isPending || !addId.trim() || !addName.trim()}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {addParticipant.isPending ? 'Adding…' : 'Add'}
-          </button>
         </div>
         {addParticipant.isError && (
           <p className="text-xs text-red-600 mt-1">{String(addParticipant.error)}</p>

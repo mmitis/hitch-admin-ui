@@ -21,13 +21,13 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Generate QR code for authentication (contains Bearer token with base64-encoded userId:name)
  */
-export const appControllerGetAuthQrCode = <ThrowOnError extends boolean = false>(options: Options<AppControllerGetAuthQrCodeData, ThrowOnError>) => (options.client ?? client).get<AppControllerGetAuthQrCodeResponses, AppControllerGetAuthQrCodeErrors, ThrowOnError>({ url: '/auth/qr', ...options });
+export const appControllerGetAuthQrCode = <ThrowOnError extends boolean = false>(options: Options<AppControllerGetAuthQrCodeData, ThrowOnError>) => (options.client ?? client).get<AppControllerGetAuthQrCodeResponses, AppControllerGetAuthQrCodeErrors, ThrowOnError>({ url: '/api/auth/qr', ...options });
 
 /**
  * Add user position to the map
  */
 export const hitchControllerAddPosition = <ThrowOnError extends boolean = false>(options: Options<HitchControllerAddPositionData, ThrowOnError>) => (options.client ?? client).post<HitchControllerAddPositionResponses, HitchControllerAddPositionErrors, ThrowOnError>({
-    url: '/hitch/contest/{contestId}/map/position',
+    url: '/api/hitch/contest/{contestId}/map/position',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -40,26 +40,26 @@ export const hitchControllerAddPosition = <ThrowOnError extends boolean = false>
  */
 export const hitchControllerGetMapPositionsAdmin = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetMapPositionsAdminData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetMapPositionsAdminResponses, HitchControllerGetMapPositionsAdminErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/hitch/contest/{contestId}/map/admin',
+    url: '/api/hitch/contest/{contestId}/map/admin',
     ...options
 });
 
 /**
  * Get all positions on the map
  */
-export const hitchControllerGetMapPositions = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetMapPositionsData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetMapPositionsResponses, HitchControllerGetMapPositionsErrors, ThrowOnError>({ url: '/hitch/contest/{contestId}/map', ...options });
+export const hitchControllerGetMapPositions = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetMapPositionsData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetMapPositionsResponses, HitchControllerGetMapPositionsErrors, ThrowOnError>({ url: '/api/hitch/contest/{contestId}/map', ...options });
 
 /**
  * Get current user info including nonTrackable flag
  */
-export const hitchControllerGetMe = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetMeData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetMeResponses, HitchControllerGetMeErrors, ThrowOnError>({ url: '/hitch/contest/{contestId}/me', ...options });
+export const hitchControllerGetMe = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetMeData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetMeResponses, HitchControllerGetMeErrors, ThrowOnError>({ url: '/api/hitch/contest/{contestId}/me', ...options });
 
 /**
  * Finish the contest for a specific user
  */
 export const hitchControllerFinishContest = <ThrowOnError extends boolean = false>(options: Options<HitchControllerFinishContestData, ThrowOnError>) => (options.client ?? client).post<HitchControllerFinishContestResponses, HitchControllerFinishContestErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/hitch/contest/{contestId}/finish/{userId}',
+    url: '/api/hitch/contest/{contestId}/finish/{userId}',
     ...options
 });
 
@@ -68,7 +68,7 @@ export const hitchControllerFinishContest = <ThrowOnError extends boolean = fals
  */
 export const hitchControllerHandleFlyoverCallback = <ThrowOnError extends boolean = false>(options: Options<HitchControllerHandleFlyoverCallbackData, ThrowOnError>) => (options.client ?? client).post<HitchControllerHandleFlyoverCallbackResponses, unknown, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/hitch/contest/{contestId}/flyover/callback',
+    url: '/api/hitch/contest/{contestId}/flyover/callback',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -79,19 +79,19 @@ export const hitchControllerHandleFlyoverCallback = <ThrowOnError extends boolea
 /**
  * Get flyover video status for a user
  */
-export const hitchControllerGetFlyoverStatus = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetFlyoverStatusData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetFlyoverStatusResponses, unknown, ThrowOnError>({ url: '/hitch/contest/{contestId}/flyover/{userId}', ...options });
+export const hitchControllerGetFlyoverStatus = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetFlyoverStatusData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetFlyoverStatusResponses, unknown, ThrowOnError>({ url: '/api/hitch/contest/{contestId}/flyover/{userId}', ...options });
 
 /**
  * Get user rankings sorted by finish time, then by distance to target
  */
-export const hitchControllerGetRanking = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetRankingData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetRankingResponses, HitchControllerGetRankingErrors, ThrowOnError>({ url: '/hitch/contest/{contestId}/ranking', ...options });
+export const hitchControllerGetRanking = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetRankingData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetRankingResponses, HitchControllerGetRankingErrors, ThrowOnError>({ url: '/api/hitch/contest/{contestId}/ranking', ...options });
 
 /**
  * Clear all contest data (positions, history, finished status, news)
  */
 export const hitchControllerClearContest = <ThrowOnError extends boolean = false>(options: Options<HitchControllerClearContestData, ThrowOnError>) => (options.client ?? client).delete<HitchControllerClearContestResponses, HitchControllerClearContestErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/hitch/contest/{contestId}/clear',
+    url: '/api/hitch/contest/{contestId}/clear',
     ...options
 });
 
@@ -100,7 +100,7 @@ export const hitchControllerClearContest = <ThrowOnError extends boolean = false
  */
 export const hitchControllerResetUser = <ThrowOnError extends boolean = false>(options: Options<HitchControllerResetUserData, ThrowOnError>) => (options.client ?? client).delete<HitchControllerResetUserResponses, HitchControllerResetUserErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/hitch/contest/{contestId}/reset/{userId}',
+    url: '/api/hitch/contest/{contestId}/reset/{userId}',
     ...options
 });
 
@@ -109,35 +109,35 @@ export const hitchControllerResetUser = <ThrowOnError extends boolean = false>(o
  */
 export const hitchControllerDeleteParticipant = <ThrowOnError extends boolean = false>(options: Options<HitchControllerDeleteParticipantData, ThrowOnError>) => (options.client ?? client).delete<HitchControllerDeleteParticipantResponses, HitchControllerDeleteParticipantErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/hitch/contest/{contestId}/participant/{userId}',
+    url: '/api/hitch/contest/{contestId}/participant/{userId}',
     ...options
 });
 
 /**
  * Get all position history for the current user
  */
-export const hitchControllerGetUserHistory = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetUserHistoryData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetUserHistoryResponses, HitchControllerGetUserHistoryErrors, ThrowOnError>({ url: '/hitch/contest/{contestId}/history', ...options });
+export const hitchControllerGetUserHistory = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetUserHistoryData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetUserHistoryResponses, HitchControllerGetUserHistoryErrors, ThrowOnError>({ url: '/api/hitch/contest/{contestId}/history', ...options });
 
 /**
  * Get position history for a specific user (admin, API key required)
  */
 export const hitchControllerGetUserHistoryAdmin = <ThrowOnError extends boolean = false>(options: Options<HitchControllerGetUserHistoryAdminData, ThrowOnError>) => (options.client ?? client).get<HitchControllerGetUserHistoryAdminResponses, HitchControllerGetUserHistoryAdminErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/hitch/contest/{contestId}/history/{userId}',
+    url: '/api/hitch/contest/{contestId}/history/{userId}',
     ...options
 });
 
 /**
  * Get contest information for authenticated user
  */
-export const contestControllerGetCurrentContest = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetCurrentContestData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetCurrentContestResponses, ContestControllerGetCurrentContestErrors, ThrowOnError>({ url: '/contest', ...options });
+export const contestControllerGetCurrentContest = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetCurrentContestData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetCurrentContestResponses, ContestControllerGetCurrentContestErrors, ThrowOnError>({ url: '/api/contest', ...options });
 
 /**
  * Create a new contest
  */
 export const contestControllerCreateContest = <ThrowOnError extends boolean = false>(options: Options<ContestControllerCreateContestData, ThrowOnError>) => (options.client ?? client).post<ContestControllerCreateContestResponses, ContestControllerCreateContestErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest',
+    url: '/api/contest',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -148,33 +148,33 @@ export const contestControllerCreateContest = <ThrowOnError extends boolean = fa
 /**
  * Get list of all available contests
  */
-export const contestControllerGetContestList = <ThrowOnError extends boolean = false>(options?: Options<ContestControllerGetContestListData, ThrowOnError>) => (options?.client ?? client).get<ContestControllerGetContestListResponses, unknown, ThrowOnError>({ url: '/contest/list', ...options });
+export const contestControllerGetContestList = <ThrowOnError extends boolean = false>(options?: Options<ContestControllerGetContestListData, ThrowOnError>) => (options?.client ?? client).get<ContestControllerGetContestListResponses, unknown, ThrowOnError>({ url: '/api/contest/list', ...options });
 
 /**
  * Get list of available contest logos
  */
-export const contestControllerGetLogos = <ThrowOnError extends boolean = false>(options?: Options<ContestControllerGetLogosData, ThrowOnError>) => (options?.client ?? client).get<ContestControllerGetLogosResponses, unknown, ThrowOnError>({ url: '/contest/logos', ...options });
+export const contestControllerGetLogos = <ThrowOnError extends boolean = false>(options?: Options<ContestControllerGetLogosData, ThrowOnError>) => (options?.client ?? client).get<ContestControllerGetLogosResponses, unknown, ThrowOnError>({ url: '/api/contest/logos', ...options });
 
 /**
  * Delete a contest and all related data
  */
 export const contestControllerDeleteContest = <ThrowOnError extends boolean = false>(options: Options<ContestControllerDeleteContestData, ThrowOnError>) => (options.client ?? client).delete<ContestControllerDeleteContestResponses, ContestControllerDeleteContestErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}',
+    url: '/api/contest/{contestId}',
     ...options
 });
 
 /**
  * Get contest by ID
  */
-export const contestControllerGetContestById = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetContestByIdData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetContestByIdResponses, ContestControllerGetContestByIdErrors, ThrowOnError>({ url: '/contest/{contestId}', ...options });
+export const contestControllerGetContestById = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetContestByIdData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetContestByIdResponses, ContestControllerGetContestByIdErrors, ThrowOnError>({ url: '/api/contest/{contestId}', ...options });
 
 /**
  * Update a contest
  */
 export const contestControllerUpdateContest = <ThrowOnError extends boolean = false>(options: Options<ContestControllerUpdateContestData, ThrowOnError>) => (options.client ?? client).put<ContestControllerUpdateContestResponses, ContestControllerUpdateContestErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}',
+    url: '/api/contest/{contestId}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ export const contestControllerUpdateContest = <ThrowOnError extends boolean = fa
  */
 export const contestControllerSetContestLogo = <ThrowOnError extends boolean = false>(options: Options<ContestControllerSetContestLogoData, ThrowOnError>) => (options.client ?? client).put<ContestControllerSetContestLogoResponses, ContestControllerSetContestLogoErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}/logo',
+    url: '/api/contest/{contestId}/logo',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -198,14 +198,14 @@ export const contestControllerSetContestLogo = <ThrowOnError extends boolean = f
 /**
  * Get contest schedule grouped by day
  */
-export const contestControllerGetSchedule = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetScheduleData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetScheduleResponses, ContestControllerGetScheduleErrors, ThrowOnError>({ url: '/contest/{contestId}/schedule', ...options });
+export const contestControllerGetSchedule = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetScheduleData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetScheduleResponses, ContestControllerGetScheduleErrors, ThrowOnError>({ url: '/api/contest/{contestId}/schedule', ...options });
 
 /**
  * Add a schedule event
  */
 export const contestControllerAddScheduleEvent = <ThrowOnError extends boolean = false>(options: Options<ContestControllerAddScheduleEventData, ThrowOnError>) => (options.client ?? client).post<ContestControllerAddScheduleEventResponses, ContestControllerAddScheduleEventErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}/schedule',
+    url: '/api/contest/{contestId}/schedule',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -218,7 +218,7 @@ export const contestControllerAddScheduleEvent = <ThrowOnError extends boolean =
  */
 export const contestControllerGetScheduleEvents = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetScheduleEventsData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetScheduleEventsResponses, ContestControllerGetScheduleEventsErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}/schedule/list',
+    url: '/api/contest/{contestId}/schedule/list',
     ...options
 });
 
@@ -227,7 +227,7 @@ export const contestControllerGetScheduleEvents = <ThrowOnError extends boolean 
  */
 export const contestControllerDeleteScheduleEvent = <ThrowOnError extends boolean = false>(options: Options<ContestControllerDeleteScheduleEventData, ThrowOnError>) => (options.client ?? client).delete<ContestControllerDeleteScheduleEventResponses, ContestControllerDeleteScheduleEventErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}/schedule/{eventId}',
+    url: '/api/contest/{contestId}/schedule/{eventId}',
     ...options
 });
 
@@ -236,7 +236,7 @@ export const contestControllerDeleteScheduleEvent = <ThrowOnError extends boolea
  */
 export const contestControllerUpdateScheduleEvent = <ThrowOnError extends boolean = false>(options: Options<ContestControllerUpdateScheduleEventData, ThrowOnError>) => (options.client ?? client).put<ContestControllerUpdateScheduleEventResponses, ContestControllerUpdateScheduleEventErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}/schedule/{eventId}',
+    url: '/api/contest/{contestId}/schedule/{eventId}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -247,18 +247,23 @@ export const contestControllerUpdateScheduleEvent = <ThrowOnError extends boolea
 /**
  * Get contest ranking with user data
  */
-export const contestControllerGetRanking = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetRankingData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetRankingResponses, ContestControllerGetRankingErrors, ThrowOnError>({ url: '/contest/{contestId}/ranking', ...options });
+export const contestControllerGetRanking = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetRankingData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetRankingResponses, ContestControllerGetRankingErrors, ThrowOnError>({ url: '/api/contest/{contestId}/ranking', ...options });
 
 /**
  * Get all participants in the contest (admin only)
  */
-export const contestControllerGetParticipants = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetParticipantsData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetParticipantsResponses, ContestControllerGetParticipantsErrors, ThrowOnError>({ url: '/contest/{contestId}/participants', ...options });
+export const contestControllerGetParticipants = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetParticipantsData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetParticipantsResponses, ContestControllerGetParticipantsErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/contest/{contestId}/participants',
+    ...options
+});
 
 /**
  * Add a participant to the contest
  */
 export const contestControllerAddParticipant = <ThrowOnError extends boolean = false>(options: Options<ContestControllerAddParticipantData, ThrowOnError>) => (options.client ?? client).post<ContestControllerAddParticipantResponses, ContestControllerAddParticipantErrors, ThrowOnError>({
-    url: '/contest/{contestId}/participants',
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/contest/{contestId}/participants',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -270,7 +275,7 @@ export const contestControllerAddParticipant = <ThrowOnError extends boolean = f
  * Populate user names for contest
  */
 export const contestControllerPopulateUserNames = <ThrowOnError extends boolean = false>(options: Options<ContestControllerPopulateUserNamesData, ThrowOnError>) => (options.client ?? client).post<ContestControllerPopulateUserNamesResponses, ContestControllerPopulateUserNamesErrors, ThrowOnError>({
-    url: '/contest/{contestId}/populate',
+    url: '/api/contest/{contestId}/populate',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -281,19 +286,19 @@ export const contestControllerPopulateUserNames = <ThrowOnError extends boolean 
 /**
  * Prepopulate contest with random user names and locations (for testing)
  */
-export const contestControllerPrepopulateRandomly = <ThrowOnError extends boolean = false>(options: Options<ContestControllerPrepopulateRandomlyData, ThrowOnError>) => (options.client ?? client).post<ContestControllerPrepopulateRandomlyResponses, ContestControllerPrepopulateRandomlyErrors, ThrowOnError>({ url: '/contest/{contestId}/prepopulate-randomly', ...options });
+export const contestControllerPrepopulateRandomly = <ThrowOnError extends boolean = false>(options: Options<ContestControllerPrepopulateRandomlyData, ThrowOnError>) => (options.client ?? client).post<ContestControllerPrepopulateRandomlyResponses, ContestControllerPrepopulateRandomlyErrors, ThrowOnError>({ url: '/api/contest/{contestId}/prepopulate-randomly', ...options });
 
 /**
  * Get news for a contest
  */
-export const contestControllerGetNews = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetNewsData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetNewsResponses, ContestControllerGetNewsErrors, ThrowOnError>({ url: '/contest/{contestId}/news', ...options });
+export const contestControllerGetNews = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetNewsData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetNewsResponses, ContestControllerGetNewsErrors, ThrowOnError>({ url: '/api/contest/{contestId}/news', ...options });
 
 /**
  * Add a news item to a contest
  */
 export const contestControllerAddNews = <ThrowOnError extends boolean = false>(options: Options<ContestControllerAddNewsData, ThrowOnError>) => (options.client ?? client).post<ContestControllerAddNewsResponses, ContestControllerAddNewsErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}/news',
+    url: '/api/contest/{contestId}/news',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -306,7 +311,7 @@ export const contestControllerAddNews = <ThrowOnError extends boolean = false>(o
  */
 export const contestControllerDeleteNews = <ThrowOnError extends boolean = false>(options: Options<ContestControllerDeleteNewsData, ThrowOnError>) => (options.client ?? client).delete<ContestControllerDeleteNewsResponses, ContestControllerDeleteNewsErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}/news/{newsId}',
+    url: '/api/contest/{contestId}/news/{newsId}',
     ...options
 });
 
@@ -315,7 +320,7 @@ export const contestControllerDeleteNews = <ThrowOnError extends boolean = false
  */
 export const contestControllerUpdateNews = <ThrowOnError extends boolean = false>(options: Options<ContestControllerUpdateNewsData, ThrowOnError>) => (options.client ?? client).put<ContestControllerUpdateNewsResponses, ContestControllerUpdateNewsErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/contest/{contestId}/news/{newsId}',
+    url: '/api/contest/{contestId}/news/{newsId}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -326,4 +331,4 @@ export const contestControllerUpdateNews = <ThrowOnError extends boolean = false
 /**
  * Generate QR code for contest
  */
-export const contestControllerGetContestQr = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetContestQrData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetContestQrResponses, unknown, ThrowOnError>({ url: '/contest/{contestId}/qr', ...options });
+export const contestControllerGetContestQr = <ThrowOnError extends boolean = false>(options: Options<ContestControllerGetContestQrData, ThrowOnError>) => (options.client ?? client).get<ContestControllerGetContestQrResponses, unknown, ThrowOnError>({ url: '/api/contest/{contestId}/qr', ...options });
