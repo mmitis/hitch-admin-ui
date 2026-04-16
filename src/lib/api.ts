@@ -1,18 +1,25 @@
 import { client } from '@/client/client.gen';
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000';
+
 let _apiKey: string | null = null;
+
+function applyConfig() {
+  client.setConfig({
+    baseUrl: BASE_URL,
+    headers: _apiKey ? { Authorization: `ApiKey ${_apiKey}` } : {},
+  });
+}
 
 export function setApiKey(key: string | null) {
   _apiKey = key;
+  applyConfig();
 }
 
-client.setConfig({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000',
-  auth: () => (_apiKey ? `ApiKey ${_apiKey}` : undefined),
-});
+applyConfig();
 
 client.interceptors.request.use((request) => {
-  if (_apiKey) {
+  if (_apiKey && !request.headers.get('Authorization')) {
     request.headers.set('Authorization', `ApiKey ${_apiKey}`);
   }
   return request;
